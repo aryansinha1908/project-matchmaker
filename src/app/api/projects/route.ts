@@ -5,7 +5,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { Membership } from "@/models/membership";
 import { User } from "@/models/user";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession();
 
@@ -16,25 +16,55 @@ export async function GET() {
     await connectToDB();
 
     const email = session.user.email;
-
     const user = await User.findOne({ email });
 
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    const memberships = await Membership.find({
-      user: user._id,
-    });
+    const searchParams = req.nextUrl.searchParams;
+    const searchQuery = searchParams.get("search") || "";
+    const statusFilter = searchParams.get("status") || "all";
+    const categoryFilter = searchParams.get("category") || "all";
+    const skillsFilter = searchParams.get("skill") || "";
+    const roleFilter = searchParams.get("role") || "";
 
+    const memberships = await Membership.find({ user: user._id });
     const projectIds = memberships.map((membership) => membership.project);
 
-    const Projects = await Project.find({ _id: { $in: projectIds } });
+    const dbQuery: any = { _id: { $in: projectIds } };
 
-    return NextResponse.json({
-      Projects,
-    });
+    if (searchQuery) {
+      dbQuery.$or = [
+        { title: { $regex: searchQuery, $options: "i" } }, // 'i' means case-insensitive
+        { description: { $regex: searchQuery, $options: "i" } },
+      ];
+    }
+
+    if (statusFilter !== "all") {
+      dbQuery.status = statusFilter;
+    }
+
+    if (categoryFilter !== "all") {
+      dbQuery.category = { $regex: new RegExp(`^${categoryFilter}$`, "i") };
+    }
+
+    if (skillsFilter) {
+      const skillsArray = skillsFilter
+        .split(",")
+        .map((s) => new RegExp(s.trim(), "i"));
+      dbQuery.requiredSkills = { $in: skillsArray };
+    }
+
+    if (roleFilter) {
+      dbQuery.requiredRoles = { $regex: roleFilter, $options: "i" };
+    }
+
+    const Projects = await Project.find(dbQuery).sort({ createdAt: -1 });
+
+    return NextResponse.json({ Projects });
   } catch (error) {
+    console.error("Error fetching projects:", error);
     return NextResponse.json(
       { message: "Projects Not Found" },
       { status: 404 },
