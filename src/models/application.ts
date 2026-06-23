@@ -1,4 +1,13 @@
-import mongoose from "mongoose";
+import mongoose, { Model, Document } from "mongoose";
+
+export interface IApplication extends Document {
+  applicant: mongoose.Types.ObjectId;
+  project: mongoose.Types.ObjectId;
+  message: string;
+  status: "pending" | "accepted" | "rejected";
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const applicationSchema = new mongoose.Schema(
   {
@@ -30,4 +39,6 @@ const applicationSchema = new mongoose.Schema(
 
 applicationSchema.index({ applicant: 1, project: 1 }, { unique: true });
 
-module.exports = mongoose.model("Application", applicationSchema);
+export const Application: Model<IApplication> =
+  mongoose.models.Application ||
+  mongoose.model<IApplication>("Application", applicationSchema);

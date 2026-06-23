@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
             avatar: gh.avatar_url,
             profileReadme,
           },
-          { upsert: true, new: true },
+          { upsert: true, returnDocument: "after" },
         );
       }
 

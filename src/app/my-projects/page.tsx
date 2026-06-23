@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Users, Search } from "lucide-react";
+import { Loader2, Plus, Users, Search } from "lucide-react";
 import Link from "next/link";
 
 interface ProjectDisplay {
@@ -41,29 +41,29 @@ const STATUS_COLORS: Record<string, string> = {
   archived: "bg-zinc-500/20 text-zinc-400 border-zinc-500/30",
 };
 
-export default function ExploreProjectsPage() {
+export default function ProjectsPage() {
   const [projects, setProjects] = useState<ProjectDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Filter States
+  // Filter States - Initialized to empty strings to fix the "all" rendering bug
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [category, setCategory] = useState("");
   const [skills, setSkills] = useState("");
-  const [roles, setRoles] = useState("");
+  const [role, setRole] = useState("");
 
   const loadProjects = useCallback(async () => {
     setLoading(true);
     try {
+      // Clean up empty params before sending
       const params = new URLSearchParams();
       if (search) params.append("search", search);
       if (status && status !== "all") params.append("status", status);
       if (category && category !== "all") params.append("category", category);
       if (skills) params.append("skills", skills);
-      if (roles) params.append("roles", roles);
+      if (role) params.append("role", role);
 
-      // Pointing to the global projects endpoint
       const res = await fetch(`/api/projects?${params.toString()}`);
       const json = await res.json();
 
@@ -75,8 +75,9 @@ export default function ExploreProjectsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, status, category, skills, roles]);
+  }, [search, status, category, skills, role]);
 
+  // Debounce effect
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       loadProjects();
@@ -90,27 +91,32 @@ export default function ExploreProjectsPage() {
     setStatus("");
     setCategory("");
     setSkills("");
-    setRoles("");
+    setRole("");
   };
 
-  const hasActiveFilters = search || status || category || skills || roles;
+  const hasActiveFilters = search || status || category || skills || role;
 
   return (
     <PageContainer className="space-y-6">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Explore Projects
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">My Projects</h1>
           <p className="text-muted-foreground mt-1">
-            Discover and apply to projects across the community.
+            Manage and view the projects you own or have joined.
           </p>
         </div>
+        <Link href="/projects/new">
+          <Button className="flex items-center gap-2">
+            <Plus className="size-4" />
+            Create Project
+          </Button>
+        </Link>
       </div>
 
       {/* Filters & Search Section */}
       <div className="flex flex-col gap-4 bg-card p-4 rounded-lg border shadow-sm">
+        {/* Top Row: Search and Dropdowns */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -151,17 +157,18 @@ export default function ExploreProjectsPage() {
           </div>
         </div>
 
+        {/* Bottom Row: Additional Array Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
           <Input
-            placeholder="Filter skills (e.g. React, Node.js)..."
+            placeholder="Filter by required skill (e.g. React)..."
             value={skills}
             onChange={(e) => setSkills(e.target.value)}
             className="flex-1"
           />
           <Input
-            placeholder="Filter roles (e.g. Designer, Backend)..."
-            value={roles}
-            onChange={(e) => setRoles(e.target.value)}
+            placeholder="Filter by required role (e.g. Designer)..."
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
             className="flex-1"
           />
           {hasActiveFilters && (
@@ -188,14 +195,19 @@ export default function ExploreProjectsPage() {
               No projects found
             </CardTitle>
             <CardDescription>
-              We couldn't find any projects matching your search criteria.
+              Try adjusting your search or filters to find what you're looking
+              for.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {hasActiveFilters && (
+            {hasActiveFilters ? (
               <Button variant="outline" onClick={clearFilters}>
                 Clear Filters
               </Button>
+            ) : (
+              <Link href="/projects/new">
+                <Button variant="outline">Start your first project</Button>
+              </Link>
             )}
           </CardContent>
         </Card>
@@ -230,16 +242,17 @@ export default function ExploreProjectsPage() {
               </CardHeader>
 
               <CardContent className="mt-auto space-y-4 pt-4 border-t border-border/50">
+                {/* Skills Preview */}
                 {project.requiredSkills &&
                   project.requiredSkills.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {project.requiredSkills.slice(0, 3).map((skill, idx) => (
+                      {project.requiredSkills.slice(0, 3).map((s, idx) => (
                         <Badge
                           key={idx}
                           variant="secondary"
                           className="text-[10px] px-1.5 py-0"
                         >
-                          {skill}
+                          {s}
                         </Badge>
                       ))}
                       {project.requiredSkills.length > 3 && (
@@ -250,6 +263,7 @@ export default function ExploreProjectsPage() {
                     </div>
                   )}
 
+                {/* Footer Data */}
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <div
                     className="flex items-center gap-1.5"
@@ -258,12 +272,9 @@ export default function ExploreProjectsPage() {
                     <Users className="size-4" />
                     <span>Up to {project.maxTeamSize}</span>
                   </div>
-                  {/* Notice: You can now wrap this in a Link to view the project details */}
-                  <Link href={`/projects/${project._id}`}>
-                    <Button size="sm" variant="secondary">
-                      View Details
-                    </Button>
-                  </Link>
+                  <span className="text-xs">
+                    {new Date(project.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
               </CardContent>
             </Card>

@@ -7,20 +7,36 @@ import { User } from "@/models/user";
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession();
+
+    if (!session || !session.user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
     await connectToDB();
+
+    const email = session.user.email;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
 
     const searchParams = req.nextUrl.searchParams;
     const searchQuery = searchParams.get("search") || "";
     const statusFilter = searchParams.get("status") || "all";
     const categoryFilter = searchParams.get("category") || "all";
-    const skillsFilter = searchParams.get("skills") || "";
-    const rolesFilter = searchParams.get("roles") || "";
+    const skillsFilter = searchParams.get("skill") || "";
+    const roleFilter = searchParams.get("role") || "";
 
-    const dbQuery: any = {};
+    const memberships = await Membership.find({ user: user._id });
+    const projectIds = memberships.map((membership) => membership.project);
+
+    const dbQuery: any = { _id: { $in: projectIds } };
 
     if (searchQuery) {
       dbQuery.$or = [
-        { title: { $regex: searchQuery, $options: "i" } },
+        { title: { $regex: searchQuery, $options: "i" } }, // 'i' means case-insensitive
         { description: { $regex: searchQuery, $options: "i" } },
       ];
     }
@@ -40,23 +56,19 @@ export async function GET(req: NextRequest) {
       dbQuery.requiredSkills = { $in: skillsArray };
     }
 
-    if (rolesFilter) {
-      const rolesArray = rolesFilter
-        .split(",")
-        .map((r) => new RegExp(r.trim(), "i"));
-      dbQuery.requiredRoles = { $in: rolesArray };
+    if (roleFilter) {
+      dbQuery.requiredRoles = { $regex: roleFilter, $options: "i" };
     }
 
-    const Projects = await Project.find(dbQuery)
-      .populate("owner", "name email image")
-      .sort({ createdAt: -1 });
+    console.log(dbQuery);
+    const Projects = await Project.find(dbQuery).sort({ createdAt: -1 });
 
     return NextResponse.json({ Projects });
   } catch (error) {
-    console.error("Error fetching all projects:", error);
+    console.error("Error fetching projects:", error);
     return NextResponse.json(
       { message: "Projects Not Found" },
-      { status: 500 },
+      { status: 404 },
     );
   }
 }
