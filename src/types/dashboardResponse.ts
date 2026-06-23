@@ -1,10 +1,10 @@
 import { IProject } from "@/models/project";
 
-interface DashboardResponse {
+export interface DashboardResponse {
   profile: {
     avatar: string;
     username: string;
-    bio: string;
+    profileReadme: string;
     status: string;
   };
 
@@ -12,4 +12,6 @@ interface DashboardResponse {
     active: IProject[];
     completed: IProject[];
   };
+
+  githubEvents: any[];
 }

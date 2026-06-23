@@ -2,6 +2,7 @@ import type { NextAuthOptions } from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
 import connectToDB from "./db";
 import { User } from "@/models/user";
+import { getProfileReadme } from "./github";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -13,25 +14,30 @@ export const authOptions: NextAuthOptions = {
   pages: { signIn: "/login" },
   callbacks: {
     async jwt({ token, account, profile }) {
-      // Only runs on first sign-in when account & profile are present
       if (account && profile) {
         const gh = profile as any;
+
         token.githubUsername = gh.login;
         token.avatar = gh.avatar_url;
 
-        // Upsert user in DB
+        const profileReadme = await getProfileReadme(gh.login);
+
         await connectToDB();
+
         await User.findOneAndUpdate(
-          { email: token.email },
+          { githubId: gh.id.toString() },
           {
-            githubUsername: token.githubUsername,
-            name: token.name,
-            email: token.email,
-            avatar: token.avatar,
+            githubId: gh.id.toString(),
+            githubUsername: gh.login,
+            name: gh.name,
+            email: gh.email,
+            avatar: gh.avatar_url,
+            profileReadme,
           },
           { upsert: true, new: true },
         );
       }
+
       return token;
     },
     async session({ session, token }) {

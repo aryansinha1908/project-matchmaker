@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-
 import connectToDB from "@/lib/db";
+import { getRecentActivity, getProfileReadme } from "@/lib/github";
 import { User } from "@/models/user";
 import { Membership } from "@/models/membership";
 import { Project } from "@/models/project";
@@ -40,17 +40,22 @@ export async function GET() {
       status: "completed",
     });
 
+    const githubEvents = await getRecentActivity(user.githubUsername);
+
+    const profileReadme = await getProfileReadme(user.githubUsername);
+
     return NextResponse.json({
       profile: {
         avatar: user.avatar,
         username: user.githubUsername,
-        bio: user.bio,
+        profileReadme: profileReadme,
         status: user.status,
       },
       projects: {
         active: activeProjects,
         completed: completedProjects,
       },
+      githubEvents: githubEvents,
     });
   } catch (error) {
     console.error(error);
