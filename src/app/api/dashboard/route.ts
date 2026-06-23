@@ -9,6 +9,7 @@ import { Project } from "@/models/project";
 export async function GET() {
   try {
     const session = await getServerSession();
+
     if (!session || !session.user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }

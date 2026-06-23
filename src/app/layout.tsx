@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "@/providers/SessionProvider";
+import { Navbar } from "@/components/shared/Navbar";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -16,7 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Project MatchMaker",
-  description: "Find teammates for hackathons, college projects, startup ideas, research, and open-source contributions.",
+  description:
+    "Find teammates for hackathons, college projects, startup ideas, research, and open-source contributions.",
 };
 
 export default function RootLayout({
@@ -26,11 +28,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         <SessionProvider>
-          <header className="w-full h-16 border-b border-border bg-background flex items-center px-6">
-            <span className="font-bold text-xl text-primary">Project MatchMaker</span>
-          </header>
+          <Navbar />
           <main className="min-h-[calc(100vh-4rem)]">{children}</main>
           <Toaster richColors theme="dark" />
         </SessionProvider>
