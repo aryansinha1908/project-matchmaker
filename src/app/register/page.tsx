@@ -1,11 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 export default function RegisterPage() {
+  const [loading, setLoading] = useState(false);
+
   return (
     <PageContainer className="flex items-center justify-center min-h-[calc(100vh-4rem)] py-12">
       <div className="relative">
@@ -18,10 +22,11 @@ export default function RegisterPage() {
           <CardContent>
             <Button
               className="w-full gap-2"
-              onClick={() => signIn("github", { callbackUrl: "/" })}
+              disabled={loading}
+              onClick={() => { setLoading(true); signIn("github", { callbackUrl: "/" }); }}
             >
-              <GithubIcon />
-              Continue with GitHub
+              {loading ? <LoadingSpinner size={16} className="text-primary-foreground" /> : <GithubIcon />}
+              {loading ? "Signing up..." : "Continue with GitHub"}
             </Button>
           </CardContent>
         </Card>
