@@ -32,7 +32,7 @@ export async function GET(
 
     return NextResponse.json({
       project,
-      isOwner: project.owner.email === session.user.email,
+      isOwner: (project.owner as any).email === session.user.email,
     });
   } catch {
     return NextResponse.json(
