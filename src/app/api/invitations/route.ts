@@ -3,6 +3,7 @@ import { Project } from "@/models/project";
 import { User } from "@/models/user";
 import { Invitation } from "@/models/invitation";
 import { Membership } from "@/models/membership";
+import { Conversation } from "@/models/conversation";
 import { getServerSession } from "next-auth";
 import { NextResponse, NextRequest } from "next/server";
 
@@ -159,23 +160,63 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
-    invitation.status = action;
-    await invitation.save();
-
-    // If accepted, add them to the team via the Membership model
+    // ONLY execute membership and chat logic if they ACCEPT
     if (action === "accepted") {
       await Membership.create({
         user: currentUser._id,
         project: invitation.project,
         role: "member", // Default role for invited members
       });
+
+      // ==========================================
+      // AUTOMATIC GROUP CHAT LOGIC
+      // ==========================================
+      try {
+        const projectDetails = await Project.findById(invitation.project);
+
+        if (projectDetails) {
+          // 1. Check if a group chat already exists for this project
+          let groupChat = await Conversation.findOne({
+            projectId: projectDetails._id,
+            isGroupChat: true,
+          });
+
+          if (groupChat) {
+            // 2. Safely check if user is already in the array using .toString()
+            const isAlreadyMember = groupChat.participants.some(
+              (id) => id.toString() === currentUser._id.toString(),
+            );
+
+            if (!isAlreadyMember) {
+              groupChat.participants.push(currentUser._id);
+              await groupChat.save();
+            }
+          } else {
+            // 3. If it doesn't exist, create it! (Owner + New Member = 2 people)
+            await Conversation.create({
+              isGroupChat: true,
+              groupName: `${projectDetails.title} Team`,
+              projectId: projectDetails._id,
+              participants: [projectDetails.owner, currentUser._id],
+              lastMessage: "Team chat created!",
+            });
+          }
+        }
+      } catch (chatError) {
+        // If the chat fails to create, log it but don't break the whole invite acceptance
+        console.error("Failed to create group chat:", chatError);
+      }
     }
+
+    // Cleanup: Delete the invitation whether accepted or declined
+    await Invitation.deleteOne({ _id: invitation._id });
 
     return NextResponse.json(
       { message: `Invitation ${action}` },
       { status: 200 },
     );
   } catch (error) {
+    console.error("Invitation PATCH Error:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 },

@@ -1,9 +1,11 @@
 import connectToDB from "@/lib/db";
 import { Conversation } from "@/models/conversation";
 import { User } from "@/models/user";
+import { Project } from "@/models/project"; // Required to populate the project title
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
+// GET: Fetch all conversations for the sidebar
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession();
@@ -13,19 +15,17 @@ export async function GET(req: NextRequest) {
 
     await connectToDB();
 
-    // Find the currently logged in user
     const currentUser = await User.findOne({ email: session.user.email });
     if (!currentUser) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    // Find all conversations where this user is a participant
-    // Populate the participants so the frontend sidebar can display avatars & usernames
     const conversations = await Conversation.find({
       participants: currentUser._id,
     })
       .populate("participants", "githubUsername avatar email")
-      .sort({ updatedAt: -1 }); // Sort by newest (recent contacts at the top)
+      .populate("projectId", "title") // <--- NEW: Grab the project title for the UI
+      .sort({ updatedAt: -1 });
 
     return NextResponse.json({ conversations }, { status: 200 });
   } catch (error) {
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST: Create a new chat or return an existing one
+// POST: Create a Project-Specific 1-on-1 Chat
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession();
@@ -52,7 +52,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    const { targetUserId } = await req.json();
+    // NEW: We now accept projectId from the frontend
+    const { targetUserId, projectId } = await req.json();
 
     if (!targetUserId) {
       return NextResponse.json(
@@ -61,7 +62,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if you are trying to message yourself
     if (currentUser._id.toString() === targetUserId) {
       return NextResponse.json(
         { message: "Cannot chat with yourself" },
@@ -69,16 +69,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1. Check if a conversation already exists between these EXACT two users
-    let conversation = await Conversation.findOne({
+    // 1. Build a strict query. It MUST match the participants AND the specific project.
+    let query: any = {
       participants: { $all: [currentUser._id, targetUserId], $size: 2 },
-    });
+      isGroupChat: { $ne: true }, // Ensure we don't accidentally grab the Team Chat
+    };
 
-    // 2. If no conversation exists, create a new one!
+    if (projectId) {
+      query.projectId = projectId;
+    } else {
+      query.projectId = { $exists: false }; // Standard 1-on-1 chat with no project attached
+    }
+
+    let conversation = await Conversation.findOne(query);
+
+    // 2. If it doesn't exist for THIS specific project, create a new one!
     if (!conversation) {
       conversation = await Conversation.create({
         participants: [currentUser._id, targetUserId],
+        projectId: projectId || undefined,
         lastMessage: "",
+        isGroupChat: false,
       });
     }
 

@@ -109,6 +109,7 @@ export async function GET(
         score: rec.score,
         reason: rec.reason,
         githubUsername: user?.githubUsername || "Unknown Developer",
+        email: user?.email,
         avatar: user?.avatar || "",
         skills: user?.skills || [],
         status: user?.status || "available",

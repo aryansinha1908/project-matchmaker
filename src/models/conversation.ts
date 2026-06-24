@@ -3,6 +3,9 @@ import mongoose, { Document, Model } from "mongoose";
 export interface IConversation extends Document {
   participants: mongoose.Types.ObjectId[];
   lastMessage?: string;
+  isGroupChat: boolean;
+  groupName?: string;
+  projectId?: mongoose.Types.ObjectId;
   updatedAt: Date;
 }
 
@@ -18,6 +21,18 @@ const conversationSchema = new mongoose.Schema(
     lastMessage: {
       type: String,
       default: "",
+    },
+    // NEW FIELDS FOR GROUP CHATS
+    isGroupChat: {
+      type: Boolean,
+      default: false,
+    },
+    groupName: {
+      type: String,
+    },
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Project",
     },
   },
   { timestamps: true },

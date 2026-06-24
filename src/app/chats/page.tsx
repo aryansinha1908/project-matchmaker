@@ -5,7 +5,13 @@ import { PageContainer } from "@/components/shared/PageContainer";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Loader2, Send, MessageSquare, User as UserIcon } from "lucide-react";
+import {
+  Loader2,
+  Send,
+  MessageSquare,
+  User as UserIcon,
+  Users,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
@@ -19,6 +25,9 @@ type Conversation = {
   }[];
   lastMessage: string;
   updatedAt: string;
+  isGroupChat?: boolean;
+  groupName?: string;
+  projectId?: { _id: string; title: string };
 };
 
 type Message = {
@@ -119,11 +128,28 @@ export default function ChatsPage() {
     }
   };
 
-  const getOtherParticipant = (chat: Conversation) => {
-    return (
+  const getChatDetails = (chat: Conversation) => {
+    if (chat.isGroupChat) {
+      return {
+        name: chat.groupName || "Team Chat",
+        avatar: undefined,
+        isGroup: true,
+        subtitle: "Team Chat", // <--- Badge text
+      };
+    }
+
+    const otherUser =
       chat.participants.find((p) => p.email !== session?.user?.email) ||
-      chat.participants[0]
-    );
+      chat.participants[0];
+    return {
+      name: `@${otherUser?.githubUsername || "Unknown"}`,
+      avatar: otherUser?.avatar,
+      isGroup: false,
+      // <--- Display the project title if it exists, otherwise "Direct Message"
+      subtitle: chat.projectId
+        ? `Re: ${chat.projectId.title}`
+        : "Direct Message",
+    };
   };
 
   if (loadingChats) {
@@ -149,43 +175,42 @@ export default function ChatsPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scrollbar">
-            {conversations.length === 0 ? (
-              <div className="p-6 text-center text-zinc-500 text-sm">
-                No active conversations.
-              </div>
-            ) : (
-              <ul className="divide-y divide-white/5">
-                {conversations.map((chat) => {
-                  const otherUser = getOtherParticipant(chat);
-                  const isSelected = selectedChat?._id === chat._id;
+            {conversations.map((chat) => {
+              const details = getChatDetails(chat);
+              const isSelected = selectedChat?._id === chat._id;
 
-                  return (
-                    <li
-                      key={chat._id}
-                      onClick={() => setSelectedChat(chat)}
-                      className={`p-4 flex items-center gap-3 cursor-pointer transition-colors hover:bg-white/5 ${isSelected ? "bg-white/10 border-l-2 border-[#d8b4fe]" : "border-l-2 border-transparent"}`}
-                    >
-                      <Avatar className="w-10 h-10 border border-white/10 shrink-0">
-                        <AvatarImage src={otherUser?.avatar} />
-                        <AvatarFallback className="bg-zinc-800 text-zinc-300 flex items-center justify-center">
-                          {otherUser?.githubUsername?.[0]?.toUpperCase() || (
-                            <UserIcon size={16} />
-                          )}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="overflow-hidden flex-1">
-                        <p className="text-sm font-semibold text-zinc-200 truncate">
-                          @{otherUser?.githubUsername || "Unknown"}
-                        </p>
-                        <p className="text-xs text-zinc-500 truncate mt-0.5">
-                          {chat.lastMessage || "Start a conversation..."}
-                        </p>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+              return (
+                <li
+                  key={chat._id}
+                  onClick={() => setSelectedChat(chat)}
+                  className={`p-4 flex items-center gap-3 cursor-pointer transition-colors hover:bg-white/5 ${isSelected ? "bg-white/10 border-l-2 border-[#d8b4fe]" : "border-l-2 border-transparent"}`}
+                >
+                  <Avatar className="w-10 h-10 border border-white/10 shrink-0">
+                    <AvatarImage src={details.avatar} />
+                    <AvatarFallback className="bg-zinc-800 text-zinc-300 flex items-center justify-center">
+                      {details.isGroup ? (
+                        <Users size={16} />
+                      ) : (
+                        details.name.replace("@", "")[0]?.toUpperCase()
+                      )}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="overflow-hidden flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-zinc-200 truncate">
+                        {details.name}
+                      </p>
+                      <span className="text-[9px] shrink-0 text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 truncate max-w-[90px]">
+                        {details.subtitle}
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-500 truncate mt-0.5">
+                      {chat.lastMessage || "Start a conversation..."}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
           </div>
         </Card>
 
@@ -203,22 +228,26 @@ export default function ChatsPage() {
               {/* Chat Header */}
               <div className="p-4 border-b border-white/5 bg-white/[0.02] flex items-center gap-3 z-20">
                 <Avatar className="w-8 h-8 border border-white/10 shrink-0">
-                  <AvatarImage
-                    src={getOtherParticipant(selectedChat)?.avatar}
-                  />
+                  <AvatarImage src={getChatDetails(selectedChat).avatar} />
                   <AvatarFallback className="bg-zinc-800 text-zinc-300 flex items-center justify-center">
-                    {getOtherParticipant(
-                      selectedChat,
-                    )?.githubUsername?.[0]?.toUpperCase() || "?"}
+                    {getChatDetails(selectedChat).isGroup ? (
+                      <Users size={14} />
+                    ) : (
+                      getChatDetails(selectedChat)
+                        .name.replace("@", "")[0]
+                        ?.toUpperCase()
+                    )}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <Link
-                    href={`/dashboard/${getOtherParticipant(selectedChat).githubUsername}`}
-                    className="font-semibold text-zinc-100"
-                  >
-                    @{getOtherParticipant(selectedChat)?.githubUsername}
-                  </Link>
+                  <h3 className="font-semibold text-zinc-100">
+                    {getChatDetails(selectedChat).name}
+                  </h3>
+                  {selectedChat.isGroupChat && (
+                    <p className="text-[10px] text-zinc-500">
+                      {selectedChat.participants.length} members
+                    </p>
+                  )}
                 </div>
               </div>
 

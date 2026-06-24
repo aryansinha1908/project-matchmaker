@@ -66,6 +66,7 @@ interface TeamMember {
 type Recommendation = {
   userId: string;
   githubUsername: string;
+  email: string;
   avatar: string;
   score: number;
   reason: string;
@@ -99,6 +100,7 @@ export default function ProjectDetailsPage() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [startingChat, setStartingChat] = useState(false);
+  const [startingTeamChat, setStartingTeamChat] = useState(false);
 
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
@@ -199,25 +201,25 @@ export default function ProjectDetailsPage() {
     }
   }
 
-  async function handleInvite(candidateId: string) {
-    setInviteStatus((prev) => ({ ...prev, [candidateId]: "loading" }));
+  async function handleInvite(candidateEmail: string) {
+    setInviteStatus((prev) => ({ ...prev, [candidateEmail]: "loading" }));
     try {
       const res = await fetch("/api/invitations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           projectId,
-          invitedUserId: candidateId,
+          invitedUserEmail: candidateEmail,
         }),
       });
 
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "Failed to send invite");
 
-      setInviteStatus((prev) => ({ ...prev, [candidateId]: "success" }));
+      setInviteStatus((prev) => ({ ...prev, [candidateEmail]: "success" }));
     } catch (err: any) {
       console.error(err);
-      setInviteStatus((prev) => ({ ...prev, [candidateId]: "error" }));
+      setInviteStatus((prev) => ({ ...prev, [candidateEmail]: "error" }));
       alert(err.message);
     }
   }
@@ -228,18 +230,40 @@ export default function ProjectDetailsPage() {
       const res = await fetch("/api/chats", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetUserId }),
+        body: JSON.stringify({ targetUserId, projectId }),
       });
 
       if (!res.ok) throw new Error("Failed to start chat");
-
-      // Redirect the user straight to their inbox!
       router.push("/chats");
     } catch (err: any) {
       console.error(err);
       alert(err.message);
     } finally {
       setStartingChat(false);
+    }
+  }
+
+  async function handleStartTeamChat() {
+    setStartingTeamChat(true);
+    try {
+      const res = await fetch("/api/chats/teams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to open team chat");
+      }
+
+      // Teleport straight to the chats page!
+      router.push("/chats");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message);
+    } finally {
+      setStartingTeamChat(false);
     }
   }
 
@@ -390,9 +414,33 @@ export default function ProjectDetailsPage() {
                 <CardTitle className="text-lg font-semibold text-zinc-200">
                   Current Members
                 </CardTitle>
-                <Badge variant="outline" className="bg-white/5 border-white/10">
-                  {teamMembers.length} / {project.maxTeamSize} Joined
-                </Badge>
+
+                {/* NEW: Button and Badge Container */}
+                <div className="flex items-center gap-3">
+                  {/* Only show the Team Chat button if the user is the Owner or a joined Member */}
+                  {(isOwner || userRole) && (
+                    <Button
+                      size="sm"
+                      onClick={handleStartTeamChat}
+                      disabled={startingTeamChat}
+                      className="bg-gradient-to-r from-[#c084fc] to-[#d8b4fe] hover:from-[#a855f7] hover:to-[#c084fc] text-black font-semibold h-8"
+                    >
+                      {startingTeamChat ? (
+                        <Loader2 className="size-3.5 animate-spin mr-2" />
+                      ) : (
+                        <Users className="size-3.5 mr-2" />
+                      )}
+                      Open Team Chat
+                    </Button>
+                  )}
+
+                  <Badge
+                    variant="outline"
+                    className="bg-white/5 border-white/10 h-8"
+                  >
+                    {teamMembers.length} / {project.maxTeamSize} Joined
+                  </Badge>
+                </div>
               </CardHeader>
               <CardContent className="p-0">
                 {teamMembers.length === 0 ? (
@@ -569,8 +617,8 @@ export default function ProjectDetailsPage() {
                                 ? "secondary"
                                 : "outline"
                             }
-                            className={`shrink-0 transition-all ${inviteStatus[candidate.userId] === "success" ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border-emerald-500/30" : "bg-white/5 border-white/10 hover:bg-white/10 hover:text-white"}`}
-                            onClick={() => handleInvite(candidate.userId)}
+                            className={`shrink-0 transition-all ${inviteStatus[candidate.email] === "success" ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border-emerald-500/30" : "bg-white/5 border-white/10 hover:bg-white/10 hover:text-white"}`}
+                            onClick={() => handleInvite(candidate.email)}
                             disabled={
                               inviteStatus[candidate.userId] === "loading" ||
                               inviteStatus[candidate.userId] === "success"
