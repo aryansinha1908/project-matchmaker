@@ -215,7 +215,11 @@ export default function ProjectSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Category</label>
-                <Select value={category} onValueChange={setCategory} required>
+                <Select
+                  value={category}
+                  onValueChange={setCategory as any}
+                  required
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
@@ -231,7 +235,11 @@ export default function ProjectSettingsPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Status</label>
-                <Select value={status} onValueChange={setStatus} required>
+                <Select
+                  value={status}
+                  onValueChange={setStatus as any}
+                  required
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Update status" />
                   </SelectTrigger>

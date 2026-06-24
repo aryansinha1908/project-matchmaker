@@ -149,7 +149,7 @@ export default function ExploreProjectsPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 sm:w-auto w-full">
-            <Select value={status} onValueChange={setStatus}>
+            <Select value={status} onValueChange={setStatus as any}>
               <SelectTrigger className="w-full sm:w-[160px] bg-black/40 border-white/10 text-zinc-200">
                 <div className="flex items-center gap-2">
                   <Filter className="size-3.5 text-zinc-400" />
@@ -165,7 +165,7 @@ export default function ExploreProjectsPage() {
               </SelectContent>
             </Select>
 
-            <Select value={category} onValueChange={setCategory}>
+            <Select value={category} onValueChange={setCategory as any}>
               <SelectTrigger className="w-full sm:w-[160px] bg-black/40 border-white/10 text-zinc-200">
                 <div className="flex items-center gap-2">
                   <Filter className="size-3.5 text-zinc-400" />

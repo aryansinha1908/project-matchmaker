@@ -141,8 +141,8 @@ export default function MyProjectsPage() {
         </div>
 
         <div className="flex gap-2 sm:w-auto w-full">
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-full sm:w-[150px]">
+          <Select value={status} onValueChange={setStatus as any}>
+            <SelectTrigger className="w-full sm:w-37.5">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -154,8 +154,8 @@ export default function MyProjectsPage() {
             </SelectContent>
           </Select>
 
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-full sm:w-[150px]">
+          <Select value={category} onValueChange={setCategory as any}>
+            <SelectTrigger className="w-full sm:w-37.5">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
@@ -185,7 +185,7 @@ export default function MyProjectsPage() {
           <Loader2 className="animate-spin size-8 text-muted-foreground" />
         </div>
       ) : projects.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center py-16 text-center border-dashed bg-white/[0.02]">
+        <Card className="flex flex-col items-center justify-center py-16 text-center border-dashed bg-white/2">
           <CardHeader>
             <CardTitle className="text-xl text-zinc-200">
               No projects found

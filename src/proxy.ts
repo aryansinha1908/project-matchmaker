@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 
 const publicRoutes = ["/", "/login", "/register"];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const isPublic =
     publicRoutes.includes(req.nextUrl.pathname) ||
     req.nextUrl.pathname.startsWith("/api/auth");

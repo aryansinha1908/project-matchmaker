@@ -159,7 +159,7 @@ export default function UserSettingsPage() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-medium">Availability Status</label>
-              <Select value={status} onValueChange={setStatus}>
+              <Select value={status} onValueChange={setStatus as any}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select your status" />
                 </SelectTrigger>

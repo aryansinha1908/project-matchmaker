@@ -123,10 +123,10 @@ export default function DashboardPage() {
   const githubEvents = data.githubEvents || [];
 
   const projectActivities: Activity[] = recentProjects.map((p) => ({
-    id: p._id,
+    id: p._id.toString(),
     type: "project",
     message: `Joined project ${p.title}`,
-    createdAt: p.createdAt,
+    createdAt: p.createdAt.toISOString(),
   }));
 
   const githubActivities: Activity[] = githubEvents.map(
@@ -296,7 +296,7 @@ export default function DashboardPage() {
                 <ul className="space-y-2">
                   {recentProjects.map((p) => (
                     <li
-                      key={p._id}
+                      key={p._id as any}
                       className="flex items-center justify-between text-sm"
                     >
                       <span>{p.title}</span>
