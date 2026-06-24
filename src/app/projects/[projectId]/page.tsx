@@ -98,6 +98,7 @@ export default function ProjectDetailsPage() {
 
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [startingChat, setStartingChat] = useState(false);
 
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
@@ -218,6 +219,27 @@ export default function ProjectDetailsPage() {
       console.error(err);
       setInviteStatus((prev) => ({ ...prev, [candidateId]: "error" }));
       alert(err.message);
+    }
+  }
+
+  async function handleStartChat(targetUserId: string) {
+    setStartingChat(true);
+    try {
+      const res = await fetch("/api/chats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId }),
+      });
+
+      if (!res.ok) throw new Error("Failed to start chat");
+
+      // Redirect the user straight to their inbox!
+      router.push("/chats");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message);
+    } finally {
+      setStartingChat(false);
     }
   }
 
@@ -617,28 +639,41 @@ export default function ProjectDetailsPage() {
                 <p className="text-xs text-zinc-500 font-semibold uppercase tracking-wider">
                   Project Owner
                 </p>
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/5">
-                  <Avatar className="size-6 border border-white/10">
-                    <AvatarImage
-                      src={project.owner.avatar}
-                      alt={project.owner.githubUsername || "Owner"}
-                    />
-                    <AvatarFallback className="text-xs bg-zinc-800 text-zinc-300">
-                      {(project?.owner?.githubUsername ||
-                        project?.owner?.email ||
-                        "?")[0].toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="overflow-hidden">
-                    <p className="text-sm font-semibold text-zinc-200 truncate">
-                      {project.owner.githubUsername
-                        ? `@${project.owner.githubUsername}`
-                        : "Unknown User"}
-                    </p>
-                    <p className="text-xs text-zinc-500 truncate">
-                      {project.owner.email}
-                    </p>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <Avatar className="size-8 border border-white/10 shrink-0">
+                      <AvatarImage
+                        src={project.owner.avatar}
+                        alt={project.owner.githubUsername}
+                      />
+                      <AvatarFallback className="text-xs bg-zinc-800 text-zinc-300">
+                        {(project?.owner?.githubUsername ||
+                          "?")[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="overflow-hidden">
+                      <p className="text-sm font-semibold text-zinc-200 truncate">
+                        @{project.owner.githubUsername || "Unknown User"}
+                      </p>
+                    </div>
                   </div>
+
+                  {/* NEW MESSAGE BUTTON */}
+                  {!isOwner && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="shrink-0 bg-[#d8b4fe]/10 text-[#d8b4fe] hover:bg-[#d8b4fe]/20"
+                      onClick={() => handleStartChat(project.owner._id)}
+                      disabled={startingChat}
+                    >
+                      {startingChat ? (
+                        <Loader2 className="size-3 animate-spin" />
+                      ) : (
+                        "Message"
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
 
