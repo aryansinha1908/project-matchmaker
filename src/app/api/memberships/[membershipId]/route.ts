@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 // for deletes — the two operations are distinguished by HTTP method.
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { membershipId: string } },
+  { params }: { params: Promise<{ membershipId: string }> },
 ) {
   try {
     const session = await getServerSession();
@@ -21,8 +21,10 @@ export async function GET(
 
     await connectToDB();
 
+    const { membershipId } = await params;
+
     const memberships = await Membership.find({
-      project: params.membershipId,
+      project: membershipId,
     }).populate("user", "githubUsername email avatar _id");
 
     return NextResponse.json({ memberships }, { status: 200 });
@@ -43,7 +45,7 @@ export async function GET(
 // the project. Transfer ownership first before leaving.
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { membershipId: string } },
+  { params }: { params: Promise<{ membershipId: string }> },
 ) {
   try {
     const session = await getServerSession();
@@ -59,10 +61,11 @@ export async function DELETE(
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
+    const { membershipId } = await params;
+
     // Load the membership and its project in one round-trip
-    const membership = await Membership.findById(params.membershipId).populate(
-      "project",
-    );
+    const membership =
+      await Membership.findById(membershipId).populate("project");
 
     if (!membership) {
       return NextResponse.json(
@@ -91,7 +94,7 @@ export async function DELETE(
       );
     }
 
-    await Membership.findByIdAndDelete(params.membershipId);
+    await Membership.findByIdAndDelete(membershipId);
 
     return NextResponse.json(
       { message: "Membership removed successfully" },

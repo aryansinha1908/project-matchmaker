@@ -6,9 +6,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { ai } from "@/lib/gemini";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ projectId: string }> },
 ) {
+  const { projectId } = await params;
+
   try {
     const session = await getServerSession();
 
@@ -18,7 +20,6 @@ export async function GET(
 
     await connectToDB();
 
-    const { projectId } = await params;
     const project = await Project.findById(projectId).populate(
       "owner",
       "githubUsername email avatar",
@@ -118,6 +119,7 @@ export async function GET(
       recommendations: enrichedRecommendations,
     });
   } catch (error) {
+    console.log(error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 },
