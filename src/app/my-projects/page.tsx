@@ -67,8 +67,9 @@ export default function MyProjectsPage() {
     try {
       const params = new URLSearchParams();
       if (search) params.append("search", search);
-      if (status && status !== "all") params.append("status", status);
-      if (category && category !== "all") params.append("category", category);
+      if (status && status !== "All Statuses") params.append("status", status);
+      if (category && category !== "All Categories")
+        params.append("category", category);
 
       // Fetching specifically from the my-projects endpoint
       const res = await fetch(`/api/my-projects?${params.toString()}`);
@@ -167,11 +168,11 @@ export default function MyProjectsPage() {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="recruiting">Recruiting</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
+                <SelectItem value="All Statuses">All Statuses</SelectItem>
+                <SelectItem value="Recruiting">Recruiting</SelectItem>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Completed">Completed</SelectItem>
+                <SelectItem value="Archived">Archived</SelectItem>
               </SelectContent>
             </Select>
 
@@ -183,11 +184,23 @@ export default function MyProjectsPage() {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="web">Web Dev</SelectItem>
-                <SelectItem value="mobile">Mobile</SelectItem>
-                <SelectItem value="ai">AI / ML</SelectItem>
-                <SelectItem value="game">Game Dev</SelectItem>
+                <SelectItem value="All Categories">All Categories</SelectItem>
+                <SelectItem value="Web Development">Web Development</SelectItem>
+                <SelectItem value="Mobile Development">
+                  Mobile Development
+                </SelectItem>
+                <SelectItem value="Data Science">Data Science</SelectItem>
+                <SelectItem value="Machine Learning">
+                  Machine Learning
+                </SelectItem>
+                <SelectItem value="Game Development">
+                  Game Development
+                </SelectItem>
+                <SelectItem value="DevOps">DevOps</SelectItem>
+                <SelectItem value="Open Source">Open Source</SelectItem>
+                <SelectItem value="Reasearch">Reasearch</SelectItem>
+                <SelectItem value="Design">Design</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -22,7 +22,7 @@ import {
   Info,
   UserMinus,
   Crown,
-  ExternalLink,
+  ClipboardList,
   ShieldAlert,
 } from "lucide-react";
 import Link from "next/link";
@@ -757,6 +757,19 @@ export default function ProjectDetailsPage() {
                     <Badge className="w-full justify-center py-2 bg-[#d8b4fe]/20 text-[#d8b4fe] hover:bg-[#d8b4fe]/20 border border-[#d8b4fe]/30 font-semibold text-sm">
                       You are the Owner
                     </Badge>
+
+                    {/* NEW: View Applications Button */}
+                    <Link
+                      href={`/projects/${projectId}/applications`}
+                      className="block"
+                    >
+                      <Button className="w-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20 py-6 text-base font-semibold transition-all">
+                        <ClipboardList className="size-5 mr-2" /> View
+                        Applications
+                      </Button>
+                    </Link>
+
+                    {/* Manage Settings Button */}
                     <Link
                       href={`/projects/${projectId}/settings`}
                       className="block"
