@@ -39,7 +39,7 @@ export async function GET(
     }
 
     const applications = await Application.find({ project: projectId })
-      .populate("applicant", "username email image")
+      .populate("applicant", "githubUsername email avatar")
       .sort({ createdAt: -1 });
 
     return NextResponse.json({ applications });

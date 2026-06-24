@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Loader2, Send, MessageSquare, User as UserIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 type Conversation = {
   _id: string;
@@ -212,9 +213,12 @@ export default function ChatsPage() {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-semibold text-zinc-100">
+                  <Link
+                    href={`/dashboard/${getOtherParticipant(selectedChat).githubUsername}`}
+                    className="font-semibold text-zinc-100"
+                  >
                     @{getOtherParticipant(selectedChat)?.githubUsername}
-                  </h3>
+                  </Link>
                 </div>
               </div>
 

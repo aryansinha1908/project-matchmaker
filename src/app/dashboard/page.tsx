@@ -398,10 +398,24 @@ export default function DashboardPage() {
                   className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-background/50 p-3 rounded-lg border border-border/50"
                 >
                   <div>
+                    <Avatar className="size-10 border border-white/10">
+                      <AvatarImage
+                        src={inv.invitedBy.avatar}
+                        alt={inv.invitedBy.githubUsername}
+                      />
+                      <AvatarFallback className="text-3xl">
+                        {inv.invitedBy.githubUsername?.[0]?.toUpperCase() ??
+                          "?"}
+                      </AvatarFallback>
+                    </Avatar>
+
                     <p className="text-sm font-medium">{inv.project.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      Invited by @{inv.invitedBy.username}
-                    </p>
+                    <Link
+                      className="text-xs text-muted-foreground"
+                      href={`/dashboard/${inv.invitedBy.githubUsername}`}
+                    >
+                      Invited by @{inv.invitedBy.githubUsername}
+                    </Link>
                   </div>
                   <div className="flex gap-2">
                     <Button

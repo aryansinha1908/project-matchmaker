@@ -437,7 +437,6 @@ export default function ProjectDetailsPage() {
                           </div>
                         </div>
 
-                        {/* FIX: wired up onClick + per-row loading + fade-on-hover */}
                         {isOwner && project.owner._id !== member.user?._id && (
                           <Button
                             size="sm"

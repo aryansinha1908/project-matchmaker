@@ -320,9 +320,12 @@ export default function ExploreProjectsPage() {
                     <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider leading-none">
                       Owner
                     </span>
-                    <span className="text-xs text-zinc-300 font-medium leading-tight mt-0.5 max-w-[100px] truncate">
+                    <Link
+                      href={`/dashboard/${project.owner?.githubUsername}`}
+                      className="text-xs text-zinc-300 font-medium leading-tight mt-0.5 max-w-[100px] truncate"
+                    >
                       @{project.owner?.githubUsername || "unknown"}
-                    </span>
+                    </Link>
                   </div>
                 </div>
 

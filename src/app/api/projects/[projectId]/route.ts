@@ -11,10 +11,6 @@ export async function GET(
   try {
     const session = await getServerSession();
 
-    if (!session || !session.user) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
     await connectToDB();
 
     const { projectId } = await params;
@@ -28,6 +24,13 @@ export async function GET(
         { message: "Project not found" },
         { status: 404 },
       );
+    }
+
+    if (!session) {
+      return NextResponse.json({
+        project,
+        isOwner: false,
+      });
     }
 
     return NextResponse.json({

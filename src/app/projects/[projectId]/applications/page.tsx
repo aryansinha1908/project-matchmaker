@@ -18,9 +18,9 @@ import Link from "next/link";
 
 interface Applicant {
   _id: string;
-  username?: string;
+  githubUsername?: string;
   email: string;
-  image?: string;
+  avatar?: string;
 }
 
 interface ApplicationData {
@@ -183,9 +183,9 @@ export default function ApplicationDashboard() {
                 {/* User Info Column */}
                 <div className="flex flex-col items-center sm:items-start sm:w-48 shrink-0 space-y-3">
                   <Avatar className="size-16">
-                    <AvatarImage src={app.applicant.image} />
+                    <AvatarImage src={app.applicant.avatar} />
                     <AvatarFallback className="text-lg">
-                      {(app.applicant.username ||
+                      {(app.applicant.avatar ||
                         app.applicant.email ||
                         "?")[0].toUpperCase()}
                     </AvatarFallback>
@@ -193,9 +193,9 @@ export default function ApplicationDashboard() {
                   <div className="text-center sm:text-left overflow-hidden w-full">
                     <p
                       className="font-semibold truncate"
-                      title={app.applicant.username}
+                      title={app.applicant.githubUsername}
                     >
-                      {app.applicant.username || "Unknown User"}
+                      {app.applicant.githubUsername || "Unknown User"}
                     </p>
                     <p
                       className="text-xs text-muted-foreground truncate"
