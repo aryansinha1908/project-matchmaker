@@ -6,6 +6,8 @@ export interface DashboardResponse {
     username: string;
     profileReadme: string;
     status: string;
+    skills: string[];
+    trustScore: number;
   };
 
   projects: {

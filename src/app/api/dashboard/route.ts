@@ -50,6 +50,8 @@ export async function GET() {
         username: user.githubUsername,
         profileReadme: profileReadme,
         status: user.status,
+        skills: user.skills || [],
+        trustScore: user.trustScore || 0,
       },
       projects: {
         active: activeProjects,

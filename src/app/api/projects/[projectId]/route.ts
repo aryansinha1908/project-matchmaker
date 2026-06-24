@@ -30,7 +30,10 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ project });
+    return NextResponse.json({
+      project,
+      isOwner: project.owner.email === session.user.email,
+    });
   } catch {
     return NextResponse.json(
       { message: "Failed to fetch project" },
@@ -78,6 +81,74 @@ export async function DELETE(
   } catch {
     return NextResponse.json(
       { message: "Failed to delete project" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ projectId: string }> },
+) {
+  try {
+    const session = await getServerSession();
+
+    if (!session || !session.user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectToDB();
+
+    const user = await User.findOne({ email: session.user.email });
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    const resolvedParams = await params;
+    const projectId = resolvedParams.projectId;
+
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return NextResponse.json(
+        { message: "Project not found" },
+        { status: 404 },
+      );
+    }
+
+    // Security Check: Only the owner can edit the project
+    if (project.owner.toString() !== user._id.toString()) {
+      return NextResponse.json(
+        { message: "Forbidden: You are not the owner of this project" },
+        { status: 403 },
+      );
+    }
+
+    const body = await req.json();
+
+    // Update the allowed fields
+    const updatedProject = await Project.findByIdAndUpdate(
+      projectId,
+      {
+        title: body.title,
+        description: body.description,
+        category: body.category,
+        status: body.status,
+        maxTeamSize: body.maxTeamSize,
+        requiredSkills: body.requiredSkills,
+        requiredRoles: body.requiredRoles,
+      },
+      { new: true, runValidators: true }, // Returns the updated document
+    );
+
+    return NextResponse.json(
+      { message: "Project updated successfully", project: updatedProject },
+      { status: 200 },
+    );
+  } catch (error) {
+    console.error("Error updating project:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error" },
       { status: 500 },
     );
   }

@@ -7,11 +7,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -19,7 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Users, Search } from "lucide-react";
+import {
+  Loader2,
+  Search,
+  FolderKanban,
+  ArrowRight,
+  Filter,
+} from "lucide-react";
 import Link from "next/link";
 
 interface ProjectDisplay {
@@ -32,13 +39,17 @@ interface ProjectDisplay {
   maxTeamSize: number;
   status: "recruiting" | "active" | "completed" | "archived";
   createdAt: string;
+  owner?: {
+    githubUsername?: string;
+    avatar?: string;
+  };
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  recruiting: "bg-green-500/20 text-green-400 border-green-500/30",
-  active: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  completed: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  archived: "bg-zinc-500/20 text-zinc-400 border-zinc-500/30",
+  recruiting: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  active: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  completed: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  archived: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
 };
 
 export default function ExploreProjectsPage() {
@@ -55,6 +66,8 @@ export default function ExploreProjectsPage() {
 
   const loadProjects = useCallback(async () => {
     setLoading(true);
+    setError("");
+
     try {
       const params = new URLSearchParams();
       if (search) params.append("search", search);
@@ -63,13 +76,15 @@ export default function ExploreProjectsPage() {
       if (skills) params.append("skills", skills);
       if (roles) params.append("roles", roles);
 
-      // Pointing to the global projects endpoint
+      // Pointing to the global projects endpoint with query parameters
       const res = await fetch(`/api/projects?${params.toString()}`);
       const json = await res.json();
 
       if (!res.ok) throw new Error(json.message || "Failed to load projects");
 
-      setProjects(json.Projects || []);
+      // Safety check: ensure we are setting an array to prevent crashes
+      const fetchedProjects = json.Projects || json.projects || json;
+      setProjects(Array.isArray(fetchedProjects) ? fetchedProjects : []);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -78,9 +93,10 @@ export default function ExploreProjectsPage() {
   }, [search, status, category, skills, roles]);
 
   useEffect(() => {
+    // Debounce the API call so we don't spam the server on every keystroke
     const delayDebounceFn = setTimeout(() => {
       loadProjects();
-    }, 300);
+    }, 400);
 
     return () => clearTimeout(delayDebounceFn);
   }, [loadProjects]);
@@ -96,36 +112,49 @@ export default function ExploreProjectsPage() {
   const hasActiveFilters = search || status || category || skills || roles;
 
   return (
-    <PageContainer className="space-y-6">
+    <PageContainer className="py-10 relative space-y-8">
+      {/* Background Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-purple-600/10 blur-[120px] rounded-full pointer-events-none -z-10" />
+
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-zinc-100 flex items-center gap-3">
+            <FolderKanban className="size-10 text-[#d8b4fe]" />
             Explore Projects
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-zinc-400 text-lg max-w-2xl">
             Discover and apply to projects across the community.
           </p>
         </div>
+
+        <Link href="/projects/new">
+          <Button className="bg-[#d8b4fe] hover:bg-[#c084fc] text-black font-semibold shadow-lg shadow-purple-900/20">
+            Create Project
+          </Button>
+        </Link>
       </div>
 
-      {/* Filters & Search Section */}
-      <div className="flex flex-col gap-4 bg-card p-4 rounded-lg border shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-4">
+      {/* ---------------- FILTERS BAR ---------------- */}
+      <div className="flex flex-col gap-4 p-5 border border-white/5 bg-black/20 backdrop-blur-md rounded-xl shadow-lg">
+        <div className="flex flex-col lg:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-500" />
             <Input
               placeholder="Search by title or description..."
-              className="pl-9"
+              className="pl-10 bg-black/40 border-white/10 text-zinc-200 placeholder:text-zinc-500 focus-visible:ring-purple-500/50"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
 
-          <div className="flex gap-2 sm:w-auto w-full">
+          <div className="flex flex-col sm:flex-row gap-4 sm:w-auto w-full">
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-full sm:w-[150px]">
-                <SelectValue placeholder="All Statuses" />
+              <SelectTrigger className="w-full sm:w-[160px] bg-black/40 border-white/10 text-zinc-200">
+                <div className="flex items-center gap-2">
+                  <Filter className="size-3.5 text-zinc-400" />
+                  <SelectValue placeholder="All Statuses" />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
@@ -137,8 +166,11 @@ export default function ExploreProjectsPage() {
             </Select>
 
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="w-full sm:w-[150px]">
-                <SelectValue placeholder="All Categories" />
+              <SelectTrigger className="w-full sm:w-[160px] bg-black/40 border-white/10 text-zinc-200">
+                <div className="flex items-center gap-2">
+                  <Filter className="size-3.5 text-zinc-400" />
+                  <SelectValue placeholder="All Categories" />
+                </div>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
@@ -156,116 +188,155 @@ export default function ExploreProjectsPage() {
             placeholder="Filter skills (e.g. React, Node.js)..."
             value={skills}
             onChange={(e) => setSkills(e.target.value)}
-            className="flex-1"
+            className="flex-1 bg-black/40 border-white/10 text-zinc-200 placeholder:text-zinc-500 focus-visible:ring-purple-500/50"
           />
           <Input
             placeholder="Filter roles (e.g. Designer, Backend)..."
             value={roles}
             onChange={(e) => setRoles(e.target.value)}
-            className="flex-1"
+            className="flex-1 bg-black/40 border-white/10 text-zinc-200 placeholder:text-zinc-500 focus-visible:ring-purple-500/50"
           />
+
           {hasActiveFilters && (
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={clearFilters}
-              className="sm:w-auto w-full"
+              className="sm:w-auto w-full border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300"
             >
-              Clear
+              Clear Filters
             </Button>
           )}
         </div>
       </div>
 
-      {/* Projects Grid */}
-      {loading && projects.length === 0 ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="animate-spin size-8 text-muted-foreground" />
+      {/* ---------------- PROJECTS GRID ---------------- */}
+      {error ? (
+        <div className="text-center py-20 border border-red-500/20 bg-red-500/5 rounded-xl backdrop-blur-sm">
+          <p className="text-red-400 font-medium">{error}</p>
+          <Button
+            variant="outline"
+            className="mt-4 border-red-500/20 text-red-400 hover:bg-red-500/10"
+            onClick={loadProjects}
+          >
+            Retry
+          </Button>
+        </div>
+      ) : loading && projects.length === 0 ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="animate-spin size-8 text-[#d8b4fe]" />
         </div>
       ) : projects.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center py-12 text-center border-dashed">
-          <CardHeader>
-            <CardTitle className="text-xl text-muted-foreground">
-              No projects found
-            </CardTitle>
-            <CardDescription>
-              We couldn't find any projects matching your search criteria.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {hasActiveFilters && (
-              <Button variant="outline" onClick={clearFilters}>
-                Clear Filters
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+        <div className="text-center py-24 border border-white/5 bg-black/20 rounded-xl backdrop-blur-sm flex flex-col items-center">
+          <FolderKanban className="size-12 text-zinc-600 mb-4" />
+          <h3 className="text-lg font-medium text-zinc-300">
+            No projects found
+          </h3>
+          <p className="text-zinc-500 mt-1 max-w-sm">
+            We couldn't find any projects matching your current filters. Try
+            adjusting your search criteria.
+          </p>
+          {hasActiveFilters && (
+            <Button
+              variant="link"
+              className="text-[#d8b4fe] mt-4"
+              onClick={clearFilters}
+            >
+              Clear all filters
+            </Button>
+          )}
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative">
+          {/* Overlay loader for when user is typing but we already have old data showing */}
+          {loading && (
+            <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-xl">
+              <Loader2 className="animate-spin size-8 text-[#d8b4fe]" />
+            </div>
+          )}
+
           {projects.map((project) => (
             <Card
               key={project._id}
-              className="flex flex-col hover:border-primary/50 transition-colors"
+              className="group border-white/5 bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all hover:border-purple-500/30 hover:shadow-xl hover:shadow-purple-500/5 flex flex-col h-full"
             >
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-4 border-b border-white/5 px-5 pt-5">
                 <div className="flex justify-between items-start gap-4 mb-2">
-                  <Badge variant="outline" className="text-xs">
+                  <Badge
+                    variant="outline"
+                    className="bg-white/5 border-white/10 text-zinc-300 font-medium px-2 py-0.5 truncate max-w-[120px]"
+                  >
                     {project.category}
                   </Badge>
                   <Badge
                     variant="outline"
-                    className={`capitalize text-xs whitespace-nowrap ${STATUS_COLORS[project.status] || ""}`}
+                    className={`capitalize shrink-0 ${STATUS_COLORS[project.status] || ""}`}
                   >
                     {project.status}
                   </Badge>
                 </div>
-                <CardTitle
-                  className="text-xl line-clamp-1"
-                  title={project.title}
-                >
+                <CardTitle className="text-xl font-bold text-zinc-100 group-hover:text-[#d8b4fe] transition-colors line-clamp-2">
                   {project.title}
                 </CardTitle>
-                <CardDescription className="line-clamp-2 mt-2 h-10">
-                  {project.description}
-                </CardDescription>
               </CardHeader>
 
-              <CardContent className="mt-auto space-y-4 pt-4 border-t border-border/50">
+              <CardContent className="p-5 flex-1 space-y-4">
+                <p className="text-sm text-zinc-400 line-clamp-3 leading-relaxed">
+                  {project.description}
+                </p>
+
                 {project.requiredSkills &&
                   project.requiredSkills.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {project.requiredSkills.slice(0, 3).map((skill, idx) => (
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {project.requiredSkills.slice(0, 4).map((skill, idx) => (
                         <Badge
                           key={idx}
                           variant="secondary"
-                          className="text-[10px] px-1.5 py-0"
+                          className="text-[10px] bg-white/[0.03] text-zinc-300 border-white/10 px-1.5 py-0"
                         >
                           {skill}
                         </Badge>
                       ))}
-                      {project.requiredSkills.length > 3 && (
-                        <span className="text-xs text-muted-foreground ml-1 flex items-center">
-                          +{project.requiredSkills.length - 3} more
-                        </span>
+                      {project.requiredSkills.length > 4 && (
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] bg-white/[0.03] text-zinc-500 border-white/10 px-1.5 py-0"
+                        >
+                          +{project.requiredSkills.length - 4} more
+                        </Badge>
                       )}
                     </div>
                   )}
-
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <div
-                    className="flex items-center gap-1.5"
-                    title="Max Team Size"
-                  >
-                    <Users className="size-4" />
-                    <span>Up to {project.maxTeamSize}</span>
-                  </div>
-                  {/* Notice: You can now wrap this in a Link to view the project details */}
-                  <Link href={`/projects/${project._id}`}>
-                    <Button size="sm" variant="secondary">
-                      View Details
-                    </Button>
-                  </Link>
-                </div>
               </CardContent>
+
+              <CardFooter className="p-5 pt-0 border-t border-white/5 mt-auto flex items-center justify-between">
+                <div className="flex items-center gap-2 mt-4">
+                  <Avatar className="size-7 border border-white/10">
+                    <AvatarImage src={project.owner?.avatar} />
+                    <AvatarFallback className="text-[10px] bg-zinc-800 text-zinc-300">
+                      {project.owner?.githubUsername?.[0]?.toUpperCase() || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider leading-none">
+                      Owner
+                    </span>
+                    <span className="text-xs text-zinc-300 font-medium leading-tight mt-0.5 max-w-[100px] truncate">
+                      @{project.owner?.githubUsername || "unknown"}
+                    </span>
+                  </div>
+                </div>
+
+                <Link href={`/projects/${project._id}`} className="mt-4">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-[#d8b4fe] hover:text-[#c084fc] hover:bg-[#d8b4fe]/10 p-0 px-3 h-8"
+                  >
+                    View{" "}
+                    <ArrowRight className="size-3 ml-1.5 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
+              </CardFooter>
             </Card>
           ))}
         </div>

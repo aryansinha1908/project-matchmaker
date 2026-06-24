@@ -93,6 +93,18 @@ export default function ApplicationDashboard() {
           console.error(
             "Membership creation failed, but application was marked accepted.",
           );
+          const fixRes = await fetch(
+            `/api/projects/${projectId}/applications`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                applicationId: application._id,
+                status: "pending",
+              }),
+            },
+          );
+          if (!fixRes.ok) throw new Error("Failed to fix application status");
         }
       }
 

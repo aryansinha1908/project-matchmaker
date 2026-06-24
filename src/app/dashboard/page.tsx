@@ -8,8 +8,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DashboardResponse } from "@/types/dashboardResponse";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Loader2 } from "lucide-react";
+import { Loader2, LogOut, Edit, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { signOut } from "next-auth/react";
+import Link from "next/link";
 
 const STATUS_LABELS: Record<string, string> = {
   available: "Available",
@@ -57,6 +60,7 @@ function parseGithubEvent(event: any) {
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardResponse | null>(null);
+  const [invitations, setInvitations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -79,8 +83,18 @@ export default function DashboardPage() {
         setLoading(false);
       }
     }
+    async function fetchInvitations() {
+      try {
+        const res = await fetch("/api/invitations");
+        const json = await res.json();
+        if (res.ok) setInvitations(json.invitations);
+      } catch (err) {
+        console.error("Failed to load invites", err);
+      }
+    }
 
     loadDashboard();
+    fetchInvitations();
   }, []);
 
   if (loading) {
@@ -131,12 +145,35 @@ export default function DashboardPage() {
     )
     .slice(0, 8);
 
+  const handleInviteResponse = async (
+    invitationId: string,
+    action: "accepted" | "declined",
+  ) => {
+    try {
+      const res = await fetch("/api/invitations", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invitationId, action }),
+      });
+
+      if (res.ok) {
+        // Remove it from UI
+        setInvitations((prev) =>
+          prev.filter((inv) => inv._id !== invitationId),
+        );
+      }
+    } catch (err) {
+      console.error("Failed to respond to invite");
+    }
+  };
+
   return (
     <PageContainer className="space-y-6">
       {/* Top section: profile left, about + recent projects right */}
       <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
-        {/* Left: Profile */}
-        <div className="flex flex-col items-center gap-3 pt-4">
+        {/* Left: Profile Information & Actions */}
+        <div className="flex flex-col items-center gap-4 pt-4 border-r border-border/50 pr-4">
+          {/* Avatar & Status */}
           <div className="relative">
             <Avatar className="size-36 border-2 border-border">
               <AvatarImage src={profile.avatar} alt={profile.username} />
@@ -152,11 +189,69 @@ export default function DashboardPage() {
               </span>
             )}
           </div>
-          <div className="text-center">
-            <p className="font-semibold text-lg">@{profile.username}</p>
-            <p className="text-sm text-muted-foreground">
-              {STATUS_LABELS[profile.status]}
-            </p>
+
+          {/* User Details & Trust Score */}
+          <div className="text-center w-full space-y-2">
+            <a
+              href={`https://github.com/${profile.username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center justify-center gap-2 font-bold text-2xl tracking-tight text-zinc-100 hover:text-[#d8b4fe] transition-colors"
+            >
+              @{profile.username}
+            </a>
+
+            {/* Trust Score Badge */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-sm font-medium">
+              <ShieldCheck className="size-4" />
+              Trust Score: {profile.trustScore ?? 0}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="w-full flex flex-col gap-2 mt-2">
+            {/* Make sure the href below matches where you want your profile edit page to live */}
+            <Link href="/profile/settings" className="w-full">
+              <Button
+                variant="outline"
+                className="w-full flex items-center gap-2 border-white/10 hover:bg-white/5"
+              >
+                <Edit className="size-4" />
+                Edit Profile
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              className="w-full flex items-center gap-2 border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+              onClick={() => signOut({ callbackUrl: "/" })}
+            >
+              <LogOut className="size-4" />
+              Logout
+            </Button>
+          </div>
+
+          {/* Skills Section */}
+          <div className="w-full mt-4 space-y-3">
+            <h3 className="text-sm font-medium text-muted-foreground border-b border-border/50 pb-2">
+              Technical Skills
+            </h3>
+            {profile.skills && profile.skills.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {profile.skills.map((skill: string, idx: number) => (
+                  <Badge
+                    key={idx}
+                    variant="secondary"
+                    className="bg-white/5 hover:bg-white/10 font-normal"
+                  >
+                    {skill}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">
+                No skills added yet.
+              </p>
+            )}
           </div>
         </div>
 
@@ -178,7 +273,7 @@ export default function DashboardPage() {
                   </ReactMarkdown>
                 </div>
               ) : (
-                <p className="text-muted-foreground italic">
+                <p className="text-muted-foreground italic text-sm">
                   No profile README found.
                 </p>
               )}
@@ -238,6 +333,50 @@ export default function DashboardPage() {
           />
         </CardContent>
       </Card>
+
+      {invitations.length > 0 && (
+        <Card className="border-blue-500/50 bg-blue-500/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-medium text-blue-400">
+              Pending Invitations ({invitations.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {invitations.map((inv) => (
+                <li
+                  key={inv._id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-background/50 p-3 rounded-lg border border-border/50"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{inv.project.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Invited by @{inv.invitedBy.username}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8"
+                      onClick={() => handleInviteResponse(inv._id, "declined")}
+                    >
+                      Decline
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="h-8 bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={() => handleInviteResponse(inv._id, "accepted")}
+                    >
+                      Accept
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Activity */}
       <Card>

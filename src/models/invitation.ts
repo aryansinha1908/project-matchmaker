@@ -1,4 +1,13 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Model } from "mongoose";
+
+export interface IInvitation extends Document {
+  project: mongoose.Types.ObjectId;
+  invitedUser: mongoose.Types.ObjectId;
+  invitedBy: mongoose.Types.ObjectId;
+  status: "pending" | "accepted" | "declined";
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const invitationSchema = new mongoose.Schema(
   {
@@ -31,4 +40,6 @@ const invitationSchema = new mongoose.Schema(
 
 invitationSchema.index({ project: 1, invitedUser: 1 }, { unique: true });
 
-module.exports = mongoose.model("Invitation", invitationSchema);
+export const Invitation: Model<IInvitation> =
+  mongoose.models.Invitation ||
+  mongoose.model<IInvitation>("Invitation", invitationSchema);
