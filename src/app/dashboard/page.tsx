@@ -8,11 +8,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DashboardResponse } from "@/types/dashboardResponse";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Loader2, LogOut, Edit, ShieldCheck } from "lucide-react";
+import { Loader2, LogOut, Edit, ShieldCheck, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const STATUS_LABELS: Record<string, string> = {
   available: "Available",
@@ -70,8 +76,6 @@ export default function DashboardPage() {
         const res = await fetch("/api/dashboard");
         const json = await res.json();
 
-        console.log("Dashboard response:", json);
-
         if (!res.ok) {
           throw new Error(json.message || "Failed to load dashboard");
         }
@@ -96,6 +100,40 @@ export default function DashboardPage() {
     loadDashboard();
     fetchInvitations();
   }, []);
+
+  // --- NEW: Handle Status Change ---
+  const handleStatusChange = async (newStatus: string) => {
+    if (!data) return;
+
+    // Save the old status in case the API call fails
+    const oldStatus = data.profile.status;
+
+    // Optimistically update the UI immediately
+    setData({
+      ...data,
+      profile: { ...data.profile, status: newStatus as any },
+    });
+
+    try {
+      // Assuming you have a profile update route here. Adjust the URL if needed.
+      const res = await fetch("/api/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update status");
+      }
+    } catch (err) {
+      console.error("Status update failed:", err);
+      // Revert back to the old status if the API fails
+      setData({
+        ...data,
+        profile: { ...data.profile, status: oldStatus },
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -157,7 +195,6 @@ export default function DashboardPage() {
       });
 
       if (res.ok) {
-        // Remove it from UI
         setInvitations((prev) =>
           prev.filter((inv) => inv._id !== invitationId),
         );
@@ -169,11 +206,9 @@ export default function DashboardPage() {
 
   return (
     <PageContainer className="space-y-6">
-      {/* Top section: profile left, about + recent projects right */}
       <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
-        {/* Left: Profile Information & Actions */}
         <div className="flex flex-col items-center gap-4 pt-4 border-r border-border/50 pr-4">
-          {/* Avatar & Status */}
+          {/* Avatar & Interactive Status Dropdown */}
           <div className="relative">
             <Avatar className="size-36 border-2 border-border">
               <AvatarImage src={profile.avatar} alt={profile.username} />
@@ -181,16 +216,39 @@ export default function DashboardPage() {
                 {profile.username?.[0]?.toUpperCase() ?? "?"}
               </AvatarFallback>
             </Avatar>
+
+            {/* --- MODIFIED: Interactive Status Dropdown --- */}
             {profile.status && (
-              <span
-                className={`absolute bottom-1 right-1 text-xs px-2 py-0.5 rounded-full border ${STATUS_COLORS[profile.status] ?? ""}`}
-              >
-                {STATUS_LABELS[profile.status] ?? profile.status}
-              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="absolute bottom-1 right-1 focus:outline-none">
+                  <span
+                    className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border cursor-pointer hover:brightness-110 transition-all shadow-sm ${STATUS_COLORS[profile.status] ?? ""}`}
+                  >
+                    {STATUS_LABELS[profile.status] ?? profile.status}
+                    <ChevronDown className="size-3 opacity-70" />
+                  </span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="center"
+                  className="min-w-[140px] bg-card border-border/50"
+                >
+                  {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                    <DropdownMenuItem
+                      key={key}
+                      onClick={() => handleStatusChange(key)}
+                      className={`cursor-pointer ${profile.status === key ? "bg-accent text-accent-foreground" : ""}`}
+                    >
+                      <span
+                        className={`w-2 h-2 rounded-full mr-2 ${STATUS_COLORS[key]?.split(" ")[0]}`}
+                      />
+                      {label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
 
-          {/* User Details & Trust Score */}
           <div className="text-center w-full space-y-2">
             <a
               href={`https://github.com/${profile.username}`}
@@ -201,16 +259,13 @@ export default function DashboardPage() {
               @{profile.username}
             </a>
 
-            {/* Trust Score Badge */}
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-sm font-medium">
               <ShieldCheck className="size-4" />
               Trust Score: {profile.trustScore ?? 0}
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="w-full flex flex-col gap-2 mt-2">
-            {/* Make sure the href below matches where you want your profile edit page to live */}
             <Link href="/profile/settings" className="w-full">
               <Button
                 variant="outline"
@@ -230,7 +285,6 @@ export default function DashboardPage() {
             </Button>
           </div>
 
-          {/* Skills Section */}
           <div className="w-full mt-4 space-y-3">
             <h3 className="text-sm font-medium text-muted-foreground border-b border-border/50 pb-2">
               Technical Skills
@@ -255,9 +309,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Right: About + Recent Projects stacked */}
         <div className="space-y-6">
-          {/* About Me */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-medium text-muted-foreground">
@@ -280,7 +332,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Recent Projects */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-medium text-muted-foreground">
@@ -317,7 +368,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Contribution Heatmap */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-medium text-muted-foreground">
@@ -325,7 +375,6 @@ export default function DashboardPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`https://ghchart.rshah.org/${profile.username}`}
             alt={`${profile.username}'s GitHub contribution chart`}
@@ -378,7 +427,6 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* Recent Activity */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-medium text-muted-foreground">

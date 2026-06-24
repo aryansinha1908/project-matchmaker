@@ -119,7 +119,7 @@ export async function GET(
       recommendations: enrichedRecommendations,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 },

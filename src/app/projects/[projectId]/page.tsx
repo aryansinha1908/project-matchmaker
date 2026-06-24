@@ -424,15 +424,12 @@ export default function ProjectDetailsPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <a
-                                href={`https://github.com/${member.user?.githubUsername}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="font-semibold text-sm text-zinc-200 hover:text-[#d8b4fe] transition-colors flex items-center gap-1 group/gh"
+                              <Link
+                                href={`/dashboard/${member.user?.githubUsername}`}
+                                className="font-semibold text-sm text-zinc-200 hover:text-[#d8b4fe] transition-colors flex items-center gap-1"
                               >
                                 @{member.user?.githubUsername || "Unknown"}
-                                <ExternalLink className="size-3 opacity-0 group-hover/gh:opacity-60 transition-opacity" />
-                              </a>
+                              </Link>
                             </div>
                             <p className="text-xs text-zinc-500 capitalize mt-0.5">
                               Role: {member.role}
@@ -539,10 +536,8 @@ export default function ProjectDetailsPage() {
                       >
                         <div className="flex justify-between items-start gap-4">
                           <div className="space-y-1">
-                            <a
-                              href={`https://github.com/${candidate.githubUsername}`}
-                              target="_blank"
-                              rel="noreferrer"
+                            <Link
+                              href={`/dashboard/${candidate.githubUsername}`}
                               className="font-semibold text-lg text-zinc-100 hover:text-[#d8b4fe] transition-colors flex items-center gap-2"
                             >
                               <Avatar className="size-6 border border-white/10">
@@ -562,7 +557,7 @@ export default function ProjectDetailsPage() {
                               >
                                 {candidate.score}% Match
                               </Badge>
-                            </a>
+                            </Link>
                             <p className="text-sm text-zinc-400 leading-relaxed max-w-xl">
                               {candidate.reason}
                             </p>
@@ -652,9 +647,12 @@ export default function ProjectDetailsPage() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="overflow-hidden">
-                      <p className="text-sm font-semibold text-zinc-200 truncate">
+                      <Link
+                        href={`/dashboard/${project.owner?.githubUsername}`}
+                        className="font-semibold text-sm text-zinc-200 hover:text-[#d8b4fe] transition-colors flex items-center gap-1"
+                      >
                         @{project.owner.githubUsername || "Unknown User"}
-                      </p>
+                      </Link>
                     </div>
                   </div>
 

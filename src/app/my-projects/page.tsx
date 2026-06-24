@@ -7,7 +7,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Plus, Users, Search, Pencil, Trash2 } from "lucide-react";
+import {
+  Loader2,
+  Search,
+  FolderKanban,
+  Filter,
+  Plus,
+  Users,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 
 interface ProjectDisplay {
@@ -35,10 +44,10 @@ interface ProjectDisplay {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  recruiting: "bg-green-500/20 text-green-400 border-green-500/30",
-  active: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  completed: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  archived: "bg-zinc-500/20 text-zinc-400 border-zinc-500/30",
+  recruiting: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  active: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+  completed: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+  archived: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
 };
 
 export default function MyProjectsPage() {
@@ -53,6 +62,8 @@ export default function MyProjectsPage() {
 
   const loadProjects = useCallback(async () => {
     setLoading(true);
+    setError("");
+
     try {
       const params = new URLSearchParams();
       if (search) params.append("search", search);
@@ -65,7 +76,8 @@ export default function MyProjectsPage() {
 
       if (!res.ok) throw new Error(json.message || "Failed to load projects");
 
-      setProjects(json.Projects || []);
+      const fetchedProjects = json.Projects || json.projects || json;
+      setProjects(Array.isArray(fetchedProjects) ? fetchedProjects : []);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -76,7 +88,8 @@ export default function MyProjectsPage() {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       loadProjects();
-    }, 300);
+    }, 400);
+
     return () => clearTimeout(delayDebounceFn);
   }, [loadProjects]);
 
@@ -86,7 +99,6 @@ export default function MyProjectsPage() {
     setCategory("");
   };
 
-  // --- NEW: Delete Functionality ---
   const handleDelete = async (projectId: string) => {
     const confirmed = confirm(
       "Are you sure you want to delete this project? This cannot be undone.",
@@ -94,14 +106,12 @@ export default function MyProjectsPage() {
     if (!confirmed) return;
 
     try {
-      // Assuming you will create a DELETE method in your /api/projects/[id] route
       const res = await fetch(`/api/projects/${projectId}`, {
         method: "DELETE",
       });
 
       if (!res.ok) throw new Error("Failed to delete project");
 
-      // Remove the project from the UI immediately without reloading
       setProjects((prev) => prev.filter((p) => p._id !== projectId));
     } catch (err: any) {
       alert(err.message);
@@ -111,174 +121,219 @@ export default function MyProjectsPage() {
   const hasActiveFilters = search || status || category;
 
   return (
-    <PageContainer className="space-y-6">
+    <PageContainer className="py-10 relative space-y-8">
+      {/* Background Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-purple-600/10 blur-[120px] rounded-full pointer-events-none -z-10" />
+
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Projects</h1>
-          <p className="text-muted-foreground mt-1">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-zinc-100 flex items-center gap-3">
+            <FolderKanban className="size-10 text-[#d8b4fe]" />
+            My Projects
+          </h1>
+          <p className="text-zinc-400 text-lg max-w-2xl">
             Manage the projects you own or have joined.
           </p>
         </div>
+
         <Link href="/projects/new">
-          <Button className="flex items-center gap-2 bg-[#d8b4fe] hover:bg-[#c084fc] text-black">
+          <Button className="bg-[#d8b4fe] hover:bg-[#c084fc] text-black font-semibold shadow-lg shadow-purple-900/20 flex items-center gap-2">
             <Plus className="size-4" />
             Create Project
           </Button>
         </Link>
       </div>
 
-      {/* Filters & Search Section */}
-      <div className="flex flex-col sm:flex-row gap-4 bg-card p-4 rounded-lg border shadow-sm">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search your projects..."
-            className="pl-9"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      {/* ---------------- FILTERS BAR ---------------- */}
+      <div className="flex flex-col gap-4 p-5 border border-white/5 bg-black/20 backdrop-blur-md rounded-xl shadow-lg">
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-500" />
+            <Input
+              placeholder="Search your projects..."
+              className="pl-10 bg-black/40 border-white/10 text-zinc-200 placeholder:text-zinc-500 focus-visible:ring-purple-500/50"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 sm:w-auto w-full">
+            <Select value={status} onValueChange={setStatus as any}>
+              <SelectTrigger className="w-full sm:w-[160px] bg-black/40 border-white/10 text-zinc-200">
+                <div className="flex items-center gap-2">
+                  <Filter className="size-3.5 text-zinc-400" />
+                  <SelectValue placeholder="All Statuses" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="recruiting">Recruiting</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={category} onValueChange={setCategory as any}>
+              <SelectTrigger className="w-full sm:w-[160px] bg-black/40 border-white/10 text-zinc-200">
+                <div className="flex items-center gap-2">
+                  <Filter className="size-3.5 text-zinc-400" />
+                  <SelectValue placeholder="All Categories" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="web">Web Dev</SelectItem>
+                <SelectItem value="mobile">Mobile</SelectItem>
+                <SelectItem value="ai">AI / ML</SelectItem>
+                <SelectItem value="game">Game Dev</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              onClick={clearFilters}
+              className="sm:w-auto w-full border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+            >
+              Clear Filters
+            </Button>
+          )}
         </div>
-
-        <div className="flex gap-2 sm:w-auto w-full">
-          <Select value={status} onValueChange={setStatus as any}>
-            <SelectTrigger className="w-full sm:w-37.5">
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="recruiting">Recruiting</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={category} onValueChange={setCategory as any}>
-            <SelectTrigger className="w-full sm:w-37.5">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="web">Web Dev</SelectItem>
-              <SelectItem value="mobile">Mobile</SelectItem>
-              <SelectItem value="ai">AI / ML</SelectItem>
-              <SelectItem value="game">Game Dev</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            onClick={clearFilters}
-            className="sm:w-auto w-full"
-          >
-            Clear
-          </Button>
-        )}
       </div>
 
-      {/* Projects Grid */}
-      {loading && projects.length === 0 ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="animate-spin size-8 text-muted-foreground" />
+      {/* ---------------- PROJECTS GRID ---------------- */}
+      {error ? (
+        <div className="text-center py-20 border border-red-500/20 bg-red-500/5 rounded-xl backdrop-blur-sm">
+          <p className="text-red-400 font-medium">{error}</p>
+          <Button
+            variant="outline"
+            className="mt-4 border-red-500/20 text-red-400 hover:bg-red-500/10"
+            onClick={loadProjects}
+          >
+            Retry
+          </Button>
+        </div>
+      ) : loading && projects.length === 0 ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="animate-spin size-8 text-[#d8b4fe]" />
         </div>
       ) : projects.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center py-16 text-center border-dashed bg-white/2">
-          <CardHeader>
-            <CardTitle className="text-xl text-zinc-200">
-              No projects found
-            </CardTitle>
-            <CardDescription className="text-zinc-400">
-              You haven't created or joined any projects yet.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/projects/new">
-              <Button variant="outline" className="border-white/20">
+        <div className="text-center py-24 border border-white/5 bg-black/20 rounded-xl backdrop-blur-sm flex flex-col items-center">
+          <FolderKanban className="size-12 text-zinc-600 mb-4" />
+          <h3 className="text-lg font-medium text-zinc-300">
+            No projects found
+          </h3>
+          <p className="text-zinc-500 mt-1 max-w-sm">
+            {hasActiveFilters
+              ? "We couldn't find any of your projects matching these filters."
+              : "You haven't created or joined any projects yet."}
+          </p>
+          {!hasActiveFilters ? (
+            <Link href="/projects/new" className="mt-6">
+              <Button
+                variant="outline"
+                className="border-white/20 text-zinc-300 hover:bg-white/5"
+              >
                 Start your first project
               </Button>
             </Link>
-          </CardContent>
-        </Card>
+          ) : (
+            <Button
+              variant="link"
+              className="text-[#d8b4fe] mt-4"
+              onClick={clearFilters}
+            >
+              Clear all filters
+            </Button>
+          )}
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative">
+          {/* Overlay loader for when user is typing but we already have old data showing */}
+          {loading && (
+            <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-xl">
+              <Loader2 className="animate-spin size-8 text-[#d8b4fe]" />
+            </div>
+          )}
+
           {projects.map((project) => (
             <Card
               key={project._id}
-              className="flex flex-col hover:border-primary/50 transition-colors bg-card"
+              className="group border-white/5 bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all hover:border-purple-500/30 hover:shadow-xl hover:shadow-purple-500/5 flex flex-col h-full"
             >
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-4 border-b border-white/5 px-5 pt-5">
                 <div className="flex justify-between items-start gap-4 mb-2">
-                  <Badge variant="outline" className="text-xs">
+                  <Badge
+                    variant="outline"
+                    className="bg-white/5 border-white/10 text-zinc-300 font-medium px-2 py-0.5 truncate max-w-[120px]"
+                  >
                     {project.category}
                   </Badge>
                   <Badge
                     variant="outline"
-                    className={`capitalize text-xs whitespace-nowrap ${STATUS_COLORS[project.status] || ""}`}
+                    className={`capitalize shrink-0 ${STATUS_COLORS[project.status] || ""}`}
                   >
                     {project.status}
                   </Badge>
                 </div>
                 <CardTitle
-                  className="text-xl line-clamp-1"
+                  className="text-xl font-bold text-zinc-100 group-hover:text-[#d8b4fe] transition-colors line-clamp-2"
                   title={project.title}
                 >
                   {project.title}
                 </CardTitle>
-                <CardDescription className="line-clamp-2 mt-2 h-10">
-                  {project.description}
-                </CardDescription>
               </CardHeader>
 
-              <CardContent className="mt-auto space-y-4 pt-4 border-t border-border/50 flex flex-col justify-end">
-                {/* Footer Data */}
-                <div className="flex items-center justify-between text-sm text-muted-foreground mb-1">
+              <CardContent className="p-5 flex-1 space-y-4">
+                <p className="text-sm text-zinc-400 line-clamp-3 leading-relaxed">
+                  {project.description}
+                </p>
+
+                <div className="flex items-center justify-between text-sm text-zinc-500 pt-2 border-t border-white/5 mt-4">
                   <div
-                    className="flex items-center gap-1.5"
+                    className="flex items-center gap-1.5 pt-3"
                     title="Max Team Size"
                   >
-                    <Users className="size-4" />
-                    <span>Up to {project.maxTeamSize} team</span>
+                    <Users className="size-4 text-zinc-400" />
+                    <span className="text-xs">Up to {project.maxTeamSize}</span>
                   </div>
-                  <span className="text-xs">
+                  <span className="text-[10px] uppercase tracking-wider pt-3">
                     {new Date(project.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-
-                {/* --- NEW: Action Buttons --- */}
-                <div className="flex items-center gap-2 pt-2">
-                  <Link href={`/projects/${project._id}`} className="flex-1">
-                    <Button size="sm" className="w-full" variant="secondary">
-                      View Hub
-                    </Button>
-                  </Link>
-
-                  {/* Edit Button */}
-                  <Link href={`/projects/${project._id}/settings`}>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      title="Edit Project"
-                      className="px-3 hover:text-blue-400 hover:border-blue-500/50"
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                  </Link>
-
-                  {/* Delete Button */}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    title="Delete Project"
-                    className="px-3 hover:text-red-400 hover:border-red-500/50"
-                    onClick={() => handleDelete(project._id)}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
               </CardContent>
+
+              <CardFooter className="p-5 pt-4 border-t border-white/5 mt-auto flex items-center gap-2">
+                <Link href={`/projects/${project._id}`} className="flex-1">
+                  <Button className="w-full bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/10 transition-colors">
+                    View Hub
+                  </Button>
+                </Link>
+
+                <Link href={`/projects/${project._id}/settings`}>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    title="Edit Project"
+                    className="bg-transparent border-white/10 text-zinc-400 hover:text-blue-400 hover:border-blue-500/30 hover:bg-blue-500/10 transition-colors"
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                </Link>
+
+                <Button
+                  size="icon"
+                  variant="outline"
+                  title="Delete Project"
+                  onClick={() => handleDelete(project._id)}
+                  className="bg-transparent border-white/10 text-zinc-400 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10 transition-colors"
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </CardFooter>
             </Card>
           ))}
         </div>

@@ -19,7 +19,6 @@ export async function GET(req: NextRequest) {
         project: projectId,
       }).populate("user", "githubUsername avatar email");
 
-      console.log(memberships);
       return NextResponse.json({ memberships }, { status: 200 });
     }
 

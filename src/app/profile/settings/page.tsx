@@ -21,7 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, ArrowLeft, Save, Trash2, AlertTriangle } from "lucide-react";
+import {
+  Loader2,
+  ArrowLeft,
+  Save,
+  Trash2,
+  AlertTriangle,
+  Settings,
+} from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 
@@ -121,49 +128,59 @@ export default function UserSettingsPage() {
   if (loading) {
     return (
       <PageContainer className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-        <Loader2 className="animate-spin size-8 text-muted-foreground" />
+        <Loader2 className="animate-spin size-8 text-[#d8b4fe]" />
       </PageContainer>
     );
   }
 
   return (
-    <PageContainer className="py-8 max-w-3xl space-y-6">
+    <PageContainer className="py-10 relative max-w-3xl space-y-8">
+      {/* Background Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-purple-600/10 blur-[120px] rounded-full pointer-events-none -z-10" />
+
+      {/* Back navigation */}
       <Link
         href="/dashboard"
-        className="text-sm text-muted-foreground flex items-center gap-2 hover:text-primary transition-colors w-fit"
+        className="text-sm text-zinc-400 flex items-center gap-2 hover:text-[#d8b4fe] transition-colors w-fit"
       >
         <ArrowLeft className="size-4" />
         Back to Dashboard
       </Link>
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Profile Settings
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your public profile and availability.
-          </p>
-        </div>
+      {/* Header Section */}
+      <div className="space-y-2">
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-zinc-100 flex items-center gap-3">
+          <Settings className="size-10 text-[#d8b4fe]" />
+          Profile Settings
+        </h1>
+        <p className="text-zinc-400 text-lg">
+          Manage your public profile and availability.
+        </p>
       </div>
 
-      <Card>
+      {/* Settings Form Card */}
+      <Card className="border-white/5 bg-black/40 backdrop-blur-md shadow-xl">
         <form onSubmit={handleSubmit}>
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>
+          <CardHeader className="pb-4 border-b border-white/5">
+            <CardTitle className="text-xl font-bold text-zinc-100">
+              Personal Information
+            </CardTitle>
+            <CardDescription className="text-zinc-400 mt-1">
               Update how you appear to other developers on the platform.
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="space-y-6">
+          <CardContent className="p-6 space-y-6">
+            {/* Status Select */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Availability Status</label>
+              <label className="text-sm font-medium text-zinc-300">
+                Availability Status
+              </label>
               <Select value={status} onValueChange={setStatus as any}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full bg-black/40 border-white/10 text-zinc-200 focus:ring-purple-500/50">
                   <SelectValue placeholder="Select your status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-zinc-900 border-white/10 text-zinc-200">
                   <SelectItem value="available">Available</SelectItem>
                   <SelectItem value="busy">Busy</SelectItem>
                   <SelectItem value="looking_for_team">
@@ -176,54 +193,66 @@ export default function UserSettingsPage() {
               </Select>
             </div>
 
+            {/* Technical Skills Input */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">
+              <label className="text-sm font-medium text-zinc-300">
                 Technical Skills (Comma separated)
               </label>
               <Input
                 value={skills}
                 onChange={(e) => setSkills(e.target.value)}
                 placeholder="e.g. React, Node.js, Python, Figma"
+                className="bg-black/40 border-white/10 text-zinc-200 placeholder:text-zinc-500 focus-visible:ring-purple-500/50"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-zinc-500">
                 These will be displayed as badges on your profile.
               </p>
             </div>
 
+            {/* Custom Bio Textarea */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Custom Bio</label>
+              <label className="text-sm font-medium text-zinc-300">
+                Custom Bio
+              </label>
               <Textarea
                 rows={5}
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Tell the community a bit about yourself..."
-                className="resize-none"
+                className="resize-none bg-black/40 border-white/10 text-zinc-200 placeholder:text-zinc-500 focus-visible:ring-purple-500/50"
               />
             </div>
 
+            {/* Alert Notifications */}
             {error && (
-              <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-md">
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-md backdrop-blur-sm">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="p-3 bg-green-500/10 border border-green-500/20 text-green-500 text-sm rounded-md">
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm rounded-md backdrop-blur-sm">
                 Profile updated successfully!
               </div>
             )}
           </CardContent>
 
-          <CardFooter className="border-t pt-6 flex justify-end gap-3">
+          {/* Form Actions Footer */}
+          <CardFooter className="p-6 border-t border-white/5 flex justify-end gap-3">
             <Link href="/dashboard">
-              <Button type="button" variant="ghost" disabled={saving}>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={saving}
+                className="text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+              >
                 Cancel
               </Button>
             </Link>
             <Button
               type="submit"
               disabled={saving}
-              className="bg-[#d8b4fe] hover:bg-[#c084fc] text-black"
+              className="bg-[#d8b4fe] hover:bg-[#c084fc] text-black font-semibold shadow-lg shadow-purple-900/20"
             >
               {saving ? (
                 <>
@@ -240,18 +269,18 @@ export default function UserSettingsPage() {
       </Card>
 
       {/* Danger Zone */}
-      <Card className="border-red-500/20 bg-red-500/5 mt-8">
+      <Card className="border-red-500/20 bg-red-500/5 backdrop-blur-md mt-8">
         <CardHeader>
-          <CardTitle className="text-red-500 flex items-center gap-2">
+          <CardTitle className="text-red-400 flex items-center gap-2 font-bold">
             <AlertTriangle className="size-5" /> Danger Zone
           </CardTitle>
-          <CardDescription className="text-red-400/80">
+          <CardDescription className="text-red-400/60">
             Permanently delete your account and all associated data.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6 pt-0">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <p className="text-sm text-muted-foreground max-w-lg">
+            <p className="text-sm text-zinc-400 max-w-lg leading-relaxed">
               Once you delete your account, there is no going back. Please be
               certain. All your projects, applications, and team memberships
               will be wiped.
@@ -259,7 +288,7 @@ export default function UserSettingsPage() {
             <Button
               variant="destructive"
               onClick={handleDeleteAccount}
-              className="shrink-0"
+              className="shrink-0 bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors"
             >
               <Trash2 className="mr-2 size-4" /> Delete Account
             </Button>

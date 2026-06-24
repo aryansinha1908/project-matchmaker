@@ -3,7 +3,6 @@ import { Project } from "@/models/project";
 import { getServerSession } from "next-auth";
 import { NextResponse, NextRequest } from "next/server";
 import { Membership } from "@/models/membership";
-import { Application } from "@/models/application";
 import { User } from "@/models/user";
 
 export async function GET(req: NextRequest) {
@@ -49,7 +48,7 @@ export async function GET(req: NextRequest) {
     }
 
     const Projects = await Project.find(dbQuery)
-      .populate("owner", "name email image")
+      .populate("owner", "githubUsername email avatar")
       .sort({ createdAt: -1 });
 
     return NextResponse.json({ Projects });

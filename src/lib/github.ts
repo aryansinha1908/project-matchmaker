@@ -36,8 +36,6 @@ export async function getProfileReadme(username: string) {
       return "";
     }
 
-    console.log(Buffer.from(data.content, "base64").toString("utf-8"));
-
     return Buffer.from(data.content, "base64").toString("utf-8");
   } catch (error) {
     console.error("Failed to fetch profile README:", error);

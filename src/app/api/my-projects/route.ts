@@ -60,7 +60,6 @@ export async function GET(req: NextRequest) {
       dbQuery.requiredRoles = { $regex: roleFilter, $options: "i" };
     }
 
-    console.log(dbQuery);
     const Projects = await Project.find(dbQuery).sort({ createdAt: -1 });
 
     return NextResponse.json({ Projects });
