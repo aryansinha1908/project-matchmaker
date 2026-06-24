@@ -320,7 +320,7 @@ export default function MyProjectsPage() {
               </CardContent>
 
               <CardFooter className="p-5 pt-4 border-t border-white/5 mt-auto flex items-center gap-2">
-                <Link href={`/projects/${project._id}`} className="flex-1">
+                <Link href={`/hub/${project._id}`} className="flex-1">
                   <Button className="w-full bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/10 transition-colors">
                     View Hub
                   </Button>

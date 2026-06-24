@@ -1,7 +1,7 @@
 import connectToDB from "@/lib/db";
 import { Conversation } from "@/models/conversation";
 import { User } from "@/models/user";
-import { Project } from "@/models/project"; // Required to populate the project title
+import { Project } from "@/models/project";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       participants: currentUser._id,
     })
       .populate("participants", "githubUsername avatar email")
-      .populate("projectId", "title") // <--- NEW: Grab the project title for the UI
+      .populate({ path: "projectId", select: "title", model: Project })
       .sort({ updatedAt: -1 });
 
     return NextResponse.json({ conversations }, { status: 200 });

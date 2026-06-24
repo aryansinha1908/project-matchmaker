@@ -189,7 +189,7 @@ export default function ExploreProjectsPage() {
                 </SelectItem>
                 <SelectItem value="DevOps">DevOps</SelectItem>
                 <SelectItem value="Open Source">Open Source</SelectItem>
-                <SelectItem value="Machine Learning">Reasearch</SelectItem>
+                <SelectItem value="Reasearch">Reasearch</SelectItem>
                 <SelectItem value="Design">Design</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
