@@ -126,7 +126,7 @@ export default function DashboardPage() {
     id: p._id.toString(),
     type: "project",
     message: `Joined project ${p.title}`,
-    createdAt: p.createdAt.toISOString(),
+    createdAt: new Date(p.createdAt).toLocaleDateString(),
   }));
 
   const githubActivities: Activity[] = githubEvents.map(
