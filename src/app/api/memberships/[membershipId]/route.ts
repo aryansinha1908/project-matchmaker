@@ -74,7 +74,7 @@ export async function DELETE(
       );
     }
 
-    const project = membership.project as InstanceType<typeof Project>;
+    const project = membership.project as any;
     const isProjectOwner = String(project.owner) === String(caller._id);
     const isSelf = String(membership.user) === String(caller._id);
 
