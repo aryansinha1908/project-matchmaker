@@ -27,7 +27,6 @@ export async function GET(req: NextRequest) {
       .populate("project", "title")
       .populate("invitedBy", "githubUsername avatar");
 
-    console.log(invitations);
     return NextResponse.json({ invitations });
   } catch (error) {
     return NextResponse.json(

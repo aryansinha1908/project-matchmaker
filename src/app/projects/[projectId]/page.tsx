@@ -111,6 +111,14 @@ export default function ProjectDetailsPage() {
   const [inviteStatus, setInviteStatus] = useState<
     Record<string, "idle" | "loading" | "success" | "error">
   >({});
+  const [compatibility, setCompatibility] = useState<{
+    overallScore: number;
+    skillMatch: number;
+    roleMatch: number;
+    summary: string;
+  } | null>(null);
+  const [checkingCompatibility, setCheckingCompatibility] = useState(false);
+  const [compatibilityError, setCompatibilityError] = useState("");
 
   useEffect(() => {
     async function loadPageData() {
@@ -267,6 +275,33 @@ export default function ProjectDetailsPage() {
       alert(err.message);
     } finally {
       setStartingTeamChat(false);
+    }
+  }
+
+  async function checkCompatibility() {
+    if (!session?.user || !data?.project) return;
+
+    setCheckingCompatibility(true);
+    setCompatibilityError("");
+
+    try {
+      const res = await fetch(`/api/projects/${projectId}/compatibility`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userProfile: session.user, // Passing the logged-in user's session data
+          projectDetails: data.project,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to analyze compatibility.");
+
+      const scoreData = await res.json();
+      setCompatibility(scoreData);
+    } catch (err: any) {
+      setCompatibilityError(err.message);
+    } finally {
+      setCheckingCompatibility(false);
     }
   }
 
@@ -774,6 +809,58 @@ export default function ProjectDetailsPage() {
               </div>
 
               <Separator className="bg-white/5" />
+
+              {/* NEW: AI Compatibility Checker */}
+              {!isOwner && !userRole && project.status === "recruiting" && (
+                <>
+                  <div className="space-y-4 py-2">
+                    <h3 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
+                      <Sparkles className="size-4 text-[#d8b4fe]" />{" "}
+                      Compatibility Check
+                    </h3>
+
+                    {!compatibility ? (
+                      <Button
+                        variant="outline"
+                        onClick={checkCompatibility}
+                        disabled={checkingCompatibility}
+                        className="w-full bg-[#d8b4fe]/5 border-[#d8b4fe]/20 text-[#d8b4fe] hover:bg-[#d8b4fe]/10 transition-all"
+                      >
+                        {checkingCompatibility ? (
+                          <Loader2 className="size-4 animate-spin mr-2" />
+                        ) : (
+                          <Sparkles className="size-4 mr-2" />
+                        )}
+                        {checkingCompatibility
+                          ? "Analyzing Compatibility..."
+                          : "Am I a good fit?"}
+                      </Button>
+                    ) : (
+                      <div className="bg-white/5 border border-[#d8b4fe]/20 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-zinc-400">
+                            Match Score
+                          </span>
+                          <Badge
+                            className={`${compatibility.overallScore >= 75 ? "bg-emerald-500/20 text-emerald-400" : "bg-yellow-500/20 text-yellow-400"}`}
+                          >
+                            {compatibility.overallScore}%
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-zinc-300 italic leading-relaxed">
+                          "{compatibility.summary}"
+                        </p>
+                      </div>
+                    )}
+                    {compatibilityError && (
+                      <p className="text-xs text-red-400">
+                        {compatibilityError}
+                      </p>
+                    )}
+                  </div>
+                  <Separator className="bg-white/5" />
+                </>
+              )}
 
               {/* Dynamic Call to Actions */}
               <div className="pt-2">

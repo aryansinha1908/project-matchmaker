@@ -1,4 +1,5 @@
 import connectToDB from "@/lib/db";
+import { Membership } from "@/models/membership";
 import { Project } from "@/models/project";
 import { User } from "@/models/user";
 import { getServerSession } from "next-auth";
@@ -33,9 +34,39 @@ export async function GET(
       });
     }
 
+    const isOwner = (project.owner as any).email === session.user.email;
+
+    if (!isOwner) {
+      const user = await User.findOne({ email: session.user.email });
+
+      if (!user) {
+        return NextResponse.json({
+          project,
+          isOwner: false,
+        });
+      }
+
+      const membership = await Membership.findOne({
+        project: project.owner._id,
+      });
+
+      if (!membership) {
+        return NextResponse.json({
+          project,
+          isOwner: false,
+        });
+      }
+
+      return NextResponse.json({
+        project,
+        isOwner: membership.role === "owner",
+        userRole: membership.role,
+      });
+    }
+
     return NextResponse.json({
       project,
-      isOwner: (project.owner as any).email === session.user.email,
+      isOwner,
     });
   } catch {
     return NextResponse.json(
