@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { TeamReviews } from "@/components/projects/TeamReviews";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSession } from "next-auth/react";
 import {
   Loader2,
   ArrowLeft,
@@ -89,6 +91,7 @@ function getSimilarityColor(score: number) {
 }
 
 export default function ProjectDetailsPage() {
+  const { data: session } = useSession(); // Safely grab the session
   const params = useParams();
   const router = useRouter();
   const projectId = params.projectId as string;
@@ -293,6 +296,12 @@ export default function ProjectDetailsPage() {
   }
 
   const { project, userRole, isOwner } = data;
+
+  // Safely grab the current user ID to pass down to the reviews component
+  const currentUserId = isOwner
+    ? project.owner._id
+    : teamMembers.find((m) => m.user.email === session?.user?.email)?.user
+        ._id || "";
 
   return (
     <PageContainer className="py-10 relative space-y-8">
@@ -506,6 +515,17 @@ export default function ProjectDetailsPage() {
                 )}
               </CardContent>
             </Card>
+
+            {project.status === "completed" && (
+              <TeamReviews
+                projectId={project._id}
+                members={[
+                  project.owner as any,
+                  ...teamMembers.map((m) => m.user),
+                ]} // Pass all members here
+                currentUserId={currentUserId}
+              />
+            )}
 
             {/* AI Recommendations Card */}
             <Card className="border-purple-500/30 bg-gradient-to-br from-[#1a1325] to-[#0d0d12] shadow-[0_0_40px_rgba(168,85,247,0.05)] relative overflow-hidden">

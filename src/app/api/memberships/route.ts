@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 }
 
 // ─── POST /api/memberships ───────────────────────────────────────────────────
-// Body: { projectId, newUser }
+// Body: { projectId, userId, role }
 // Only the project owner may add members directly.
 export async function POST(req: NextRequest) {
   try {
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { projectId, newUser } = body;
+    const { projectId, userId, role } = body;
 
     const project = await Project.findById(projectId);
     if (!project) {
@@ -66,9 +66,9 @@ export async function POST(req: NextRequest) {
     }
 
     const membership = await Membership.create({
-      user: newUser,
+      user: userId,
       project: project._id,
-      role: "member",
+      role: role,
     });
 
     return NextResponse.json(

@@ -79,7 +79,7 @@ export default function ApplicationDashboard() {
       if (!appRes.ok) throw new Error("Failed to update application status");
 
       if (actionStatus === "accepted") {
-        const memRes = await fetch("/api/membership", {
+        const memRes = await fetch("/api/memberships", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
