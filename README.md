@@ -244,3 +244,14 @@ Detected endpoints :
 1. Install Node.js (v18+ recommended)
 2. Install dependencies: `npm install` (or `yarn` / `pnpm install` / `bun install`)
 3. Start the dev server: see the **Quick Start** above
+
+## Environment Variables
+
+```
+DATABASE_URL=
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+GEMINI_API_KEY=
+```
