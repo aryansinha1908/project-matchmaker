@@ -11,6 +11,18 @@ import {
   ShieldCheck,
   Users,
   Lock,
+  Search,
+  Sparkles,
+  Bot,
+  Activity,
+  UserPlus,
+  CheckCircle,
+  MessageSquare,
+  KanbanSquare,
+  Library,
+  Wallet,
+  GitMerge,
+  Target,
 } from "lucide-react";
 import { SiDiscord, SiGithub } from "react-icons/si";
 import Link from "next/link";
@@ -154,7 +166,7 @@ export default function Home() {
                   style={{ transform: "translateZ(80px)" }}
                   className="w-full mt-4"
                 >
-                  <div className="w-full h-48 bg-gradient-to-br from-purple-900/40 to-blue-900/40 rounded-xl border border-white/5 flex items-center justify-center overflow-hidden relative shadow-2xl">
+                  <div className="w-full h-48 bg-linear-to-br from-purple-900/40 to-blue-900/40 rounded-xl border border-white/5 flex items-center justify-center overflow-hidden relative shadow-2xl">
                     <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-50 mix-blend-overlay"></div>
                   </div>
                 </div>
@@ -177,92 +189,233 @@ export default function Home() {
         </p>
       </section>
 
-      {/* ================= FEATURES SECTION (MVP) ================= */}
-      <section className="relative z-10 bg-[#12121a] py-24 border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-semibold text-zinc-100">
-              Everything you need to ship.
+      {/* ================= 3-LAYER FEATURES SECTION ================= */}
+      <section className="relative z-10 bg-[#12121a] py-32 border-y border-white/5">
+        <div className="max-w-7xl mx-auto px-6 space-y-32">
+          <div className="text-center max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-5xl font-semibold text-zinc-100 tracking-tight mb-6">
+              A complete ecosystem for builders.
             </h2>
-            <p className="text-zinc-400 mt-4 text-lg">
-              Powerful features designed for developer collaboration.
+            <p className="text-zinc-400 text-lg">
+              From finding your perfect co-founder to shipping the final
+              product, we provide every tool you need along the way.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-colors">
-              <div className="bg-[#d8b4fe]/20 w-12 h-12 rounded-lg flex items-center justify-center mb-6">
-                <SiGithub className="text-[#d8b4fe] size-6" />
+          {/* LAYER 1: Discovery & Matching */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="space-y-6">
+              <div className="inline-flex items-center justify-center p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 mb-2">
+                <Search className="size-6 text-blue-400" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">GitHub Integration</h3>
-              <ul className="space-y-2 text-zinc-400 text-sm">
-                <li>
-                  <strong className="text-zinc-200">Only GitHub:</strong> Secure
-                  login exclusively via GitHub accounts.
+              <h3 className="text-3xl font-bold text-zinc-100">
+                Discovery & Matching
+              </h3>
+              <p className="text-lg text-zinc-400 leading-relaxed">
+                Connect your GitHub and let our engine do the heavy lifting.
+                Find teammates based on proven skills, real contributions, and
+                verifiable reputations.
+              </p>
+              <ul className="space-y-4 pt-4">
+                <li className="flex items-start gap-3 text-zinc-300">
+                  <SiGithub className="size-5 text-zinc-100 shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-white">GitHub Ingestion:</strong>{" "}
+                    Secure OAuth that automatically pulls your repos, bio, and
+                    live contribution heatmaps.
+                  </span>
                 </li>
-                <li>
-                  <strong className="text-zinc-200">Show Your Work:</strong>{" "}
-                  Auto-syncs your username, bio, and public repos.
+                <li className="flex items-start gap-3 text-zinc-300">
+                  <Bot className="size-5 text-[#d8b4fe] shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-white">AI Recommendations:</strong>{" "}
+                    Smart algorithms that suggest teammates based on required
+                    project skills and past experience.
+                  </span>
                 </li>
-                <li>
-                  <strong className="text-zinc-200">Contribution Graph:</strong>{" "}
-                  Live GitHub heatmaps on every profile to prove activity.
+                <li className="flex items-start gap-3 text-zinc-300">
+                  <Star className="size-5 text-emerald-400 shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-white">Trust Scores:</strong> Build
+                    undeniable reputation with post-project peer reviews on
+                    teamwork and technical ability.
+                  </span>
                 </li>
-                <li>
-                  <strong className="text-zinc-200">Status Updates:</strong>{" "}
-                  Toggle between Available, Busy, or Looking for Team.
+                <li className="flex items-start gap-3 text-zinc-300">
+                  <Activity className="size-5 text-[#f97316] shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-white">Live Availability:</strong>{" "}
+                    Toggle your status to "Looking for Team" so recruiters can
+                    find you instantly.
+                  </span>
                 </li>
               </ul>
             </div>
 
-            {/* Feature 2 */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-colors">
-              <div className="bg-[#f97316]/20 w-12 h-12 rounded-lg flex items-center justify-center mb-6">
-                <FolderKanban className="text-[#f97316] size-6" />
+            {/* Layer 1 Visual Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-white/10 transition-colors">
+                <SiGithub className="size-8 text-zinc-400" />
+                <span className="font-medium text-sm">OAuth Profile</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Project Management</h3>
-              <ul className="space-y-2 text-zinc-400 text-sm">
-                <li>
-                  <strong className="text-zinc-200">Pitch Ideas:</strong> Define
-                  required skills, roles, and max team sizes.
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-white/10 transition-colors">
+                <Activity className="size-8 text-emerald-400" />
+                <span className="font-medium text-sm">Contribution Graph</span>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-white/10 transition-colors">
+                <ShieldCheck className="size-8 text-blue-400" />
+                <span className="font-medium text-sm">
+                  Verified Trust Score
+                </span>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-white/10 transition-colors">
+                <Sparkles className="size-8 text-[#d8b4fe]" />
+                <span className="font-medium text-sm">AI Skill Matching</span>
+              </div>
+            </div>
+          </div>
+
+          {/* LAYER 2: Project Marketplace */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            {/* Layer 2 Visual Grid */}
+            <div className="order-2 lg:order-1 grid grid-cols-2 gap-4">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-white/10 transition-colors">
+                <FolderKanban className="size-8 text-[#f97316]" />
+                <span className="font-medium text-sm">Project Lifecycle</span>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-white/10 transition-colors">
+                <UserPlus className="size-8 text-zinc-400" />
+                <span className="font-medium text-sm">Direct Invites</span>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-white/10 transition-colors">
+                <Target className="size-8 text-red-400" />
+                <span className="font-medium text-sm">Role-Specific Slots</span>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-white/10 transition-colors">
+                <CheckCircle className="size-8 text-emerald-400" />
+                <span className="font-medium text-sm">Applicant Review</span>
+              </div>
+            </div>
+
+            <div className="order-1 lg:order-2 space-y-6">
+              <div className="inline-flex items-center justify-center p-3 bg-[#f97316]/10 rounded-xl border border-[#f97316]/20 mb-2">
+                <FolderKanban className="size-6 text-[#f97316]" />
+              </div>
+              <h3 className="text-3xl font-bold text-zinc-100">
+                Project Marketplace
+              </h3>
+              <p className="text-lg text-zinc-400 leading-relaxed">
+                Pitch your idea and build your dream team. Control exactly who
+                joins your project with granular role-based slots and
+                application reviews.
+              </p>
+              <ul className="space-y-4 pt-4">
+                <li className="flex items-start gap-3 text-zinc-300">
+                  <CheckCircle className="size-5 text-zinc-100 shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-white">Role-Based Apps:</strong>{" "}
+                    Post specific slots (e.g., 1x Frontend, 1x DevOps) to ensure
+                    a perfectly balanced team.
+                  </span>
                 </li>
-                <li>
-                  <strong className="text-zinc-200">Lifecycle:</strong> Move
-                  projects from Recruiting to Active to Completed.
+                <li className="flex items-start gap-3 text-zinc-300">
+                  <FolderKanban className="size-5 text-zinc-100 shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-white">Full Lifecycle:</strong> Move
+                    projects seamlessly from "Recruiting", to "Active", and
+                    finally "Completed".
+                  </span>
                 </li>
-                <li>
-                  <strong className="text-zinc-200">Apply & Review:</strong>{" "}
-                  Dedicated owner dashboards to accept or reject applicants.
+                <li className="flex items-start gap-3 text-zinc-300">
+                  <UserPlus className="size-5 text-zinc-100 shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-white">
+                      Headhunting & Invites:
+                    </strong>{" "}
+                    Browse the talent pool and send direct invites to developers
+                    whose skills match your stack.
+                  </span>
                 </li>
-                <li>
-                  <strong className="text-zinc-200">Team Invites:</strong>{" "}
-                  Headhunt developers and send direct team invitations.
+                <li className="flex items-start gap-3 text-zinc-300">
+                  <Target className="size-5 text-zinc-100 shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-white">Algorithmic Feed:</strong>{" "}
+                    Find projects specifically tailored to your tech stack via
+                    the personalized explore page.
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* LAYER 3: Collaboration Hub */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="space-y-6">
+              <div className="inline-flex items-center justify-center p-3 bg-[#d8b4fe]/10 rounded-xl border border-[#d8b4fe]/20 mb-2">
+                <Users className="size-6 text-[#d8b4fe]" />
+              </div>
+              <h3 className="text-3xl font-bold text-zinc-100">
+                Team Hub Collaboration
+              </h3>
+              <p className="text-lg text-zinc-400 leading-relaxed">
+                Once the team is assembled, shift into execution mode. Every
+                project gets a dedicated, secure workspace to manage tasks,
+                funds, and communication.
+              </p>
+              <ul className="space-y-4 pt-4">
+                <li className="flex items-start gap-3 text-zinc-300">
+                  <MessageSquare className="size-5 text-zinc-100 shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-white">Unified Comms:</strong>{" "}
+                    Real-time group chats for the whole project, plus private
+                    1-on-1 messaging.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3 text-zinc-300">
+                  <KanbanSquare className="size-5 text-zinc-100 shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-white">Interactive Kanban:</strong>{" "}
+                    Drag-and-drop task boards perfectly synced across your team
+                    in real-time.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3 text-zinc-300">
+                  <Wallet className="size-5 text-zinc-100 shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-white">Expense Tracker:</strong>{" "}
+                    Visually track hosting costs, API keys, and domain purchases
+                    with dynamic charts.
+                  </span>
+                </li>
+                <li className="flex items-start gap-3 text-zinc-300">
+                  <GitMerge className="size-5 text-zinc-100 shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-white">Vault & Webhooks:</strong>{" "}
+                    Store vital Figma/Repo links in the Resource Vault and track
+                    milestones effortlessly.
+                  </span>
                 </li>
               </ul>
             </div>
 
-            {/* Feature 3 */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-colors">
-              <div className="bg-emerald-500/20 w-12 h-12 rounded-lg flex items-center justify-center mb-6">
-                <Star className="text-emerald-400 size-6" />
+            {/* Layer 3 Visual Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-white/10 transition-colors">
+                <MessageSquare className="size-8 text-blue-400" />
+                <span className="font-medium text-sm">Live Group Chat</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Ratings & Trust</h3>
-              <ul className="space-y-2 text-zinc-400 text-sm">
-                <li>
-                  <strong className="text-zinc-200">Peer Reviews:</strong> Leave
-                  feedback when a project is marked Completed.
-                </li>
-                <li>
-                  <strong className="text-zinc-200">Detailed Metrics:</strong>{" "}
-                  Rate on Communication, Technical Skills, and Teamwork.
-                </li>
-                <li>
-                  <strong className="text-zinc-200">Trust Score:</strong> Build
-                  an undeniable reputation score displayed publicly on your
-                  profile based on past successful projects.
-                </li>
-              </ul>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-white/10 transition-colors">
+                <KanbanSquare className="size-8 text-[#d8b4fe]" />
+                <span className="font-medium text-sm">Kanban Board</span>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-white/10 transition-colors">
+                <Library className="size-8 text-zinc-400" />
+                <span className="font-medium text-sm">Resource Vault</span>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-3 hover:bg-white/10 transition-colors">
+                <Wallet className="size-8 text-emerald-400" />
+                <span className="font-medium text-sm">Expense Tracker</span>
+              </div>
             </div>
           </div>
         </div>
