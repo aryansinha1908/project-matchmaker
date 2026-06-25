@@ -303,6 +303,14 @@ export default function ProjectDetailsPage() {
     : teamMembers.find((m) => m.user.email === session?.user?.email)?.user
         ._id || "";
 
+  const rawMembers = [project.owner, ...teamMembers.map((m) => m.user)];
+
+  const uniqueMembers = Array.from(
+    new Map(
+      rawMembers.filter(Boolean).map((m) => [m._id?.toString(), m]),
+    ).values(),
+  );
+
   return (
     <PageContainer className="py-10 relative space-y-8">
       {/* Background Glow Effect */}
@@ -519,10 +527,7 @@ export default function ProjectDetailsPage() {
             {project.status === "completed" && (
               <TeamReviews
                 projectId={project._id}
-                members={[
-                  project.owner as any,
-                  ...teamMembers.map((m) => m.user),
-                ]} // Pass all members here
+                members={uniqueMembers as any}
                 currentUserId={currentUserId}
               />
             )}
